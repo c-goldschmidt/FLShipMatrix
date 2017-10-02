@@ -1,0 +1,13 @@
+<div class='category-tree'>
+    <div class='category-entry' *ngFor="let entry of tree">
+        <div class='category-header'>
+            <span class='plusminus' [class.disabled]="locked[entry.id]" (click)="toggleCategory(entry.id)">
+                [ {{ expanded[entry.id] ? '-' : '+' }} ]
+            </span> 
+            <span class="category-name" (click)="navigateTo(entry.id)">{{ entry.name }}</span>
+        </div>
+        <div class='subcategories' *ngIf="expanded[entry.id] && entry.children.length > 0">
+            <category-tree [tree]="entry.children"></category-tree>
+        </div>
+    </div>
+</div>

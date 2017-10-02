@@ -1,0 +1,25 @@
+<div class="cat-loading" *ngIf="loading">
+    <h3>Loading...</h3>
+</div>
+<div class="cat-detail" *ngIf="!loading">
+    <h3>{{ category.name }}</h3>
+
+    <div class="ship-list table">
+        <div class="tr header">
+            <span class="td">Name</span>
+            <span class="td">Price</span>
+            <span class="td" *ngIf="!category.is_leaf">Category</span>
+            <span class="td"></span>
+        </div>
+        <div class="tr content" *ngFor="let ship of category.ships">
+            <span class="td">{{ ship.name }}</span>
+            <span class="td">{{ ship.price | number }} cr</span>
+            <span class="td" *ngIf="!category.is_leaf">{{ ship.category.path }}</span>
+            <span class="td">
+                <a [routerLink]="['/category', ship.category.id, 'ship', ship.id]">
+                    View more details ==>
+                </a>
+            </span>            
+        </div>
+    </div>
+</div>

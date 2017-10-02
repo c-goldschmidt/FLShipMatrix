@@ -1,0 +1,50 @@
+<div class="ship-loading" *ngIf="loading">
+    <div class="content">
+        <div class="sidebar-info">
+            <div class="table">
+                <div class="tr">
+                    <div class="td">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="ship-detail" *ngIf="!loading">
+    <div class="render" [style.display]="showRender? '' : 'none'">
+        <ship-render [ship]="ship"></ship-render>
+    </div>
+
+    <div class="content">
+        <div class="infocard" [style.display]="showRender? 'none' : ''">
+            <ship-infocard [rawData]="ship.infocard"></ship-infocard>
+        </div>
+    
+        <div class="toggle-render" (click)="toggleRender()">[ toggle ]</div>
+    
+        <div class="sidebar-info">
+            <div class="table">
+                <div class="tr">
+                    <div class="td">{{ ship.name }}</div>
+                </div>
+            </div>
+            <div class="table">
+                <div class="tr">
+                    <div class="td">Hitpoints</div>
+                    <div class="td">{{ ship.hitpoints | number }}</div>
+                </div>
+                <div class="tr">
+                    <div class="td">Cargo</div>
+                    <div class="td">{{ ship.hold_size | number }}</div>
+                </div>
+                <div class="tr">
+                    <div class="td">Batteries</div>
+                    <div class="td">{{ ship.max_bats | number }}</div>
+                </div>
+                <div class="tr">
+                    <div class="td">Nanobots</div>
+                    <div class="td">{{ ship.max_bats | number }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

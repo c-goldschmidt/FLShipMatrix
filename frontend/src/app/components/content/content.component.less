@@ -1,0 +1,46 @@
+@import '../../common.less';
+
+.main-container {
+    background-color: #000;
+    .scale;
+
+    > div {
+        .scale;
+    }
+}
+
+.main-content-wrap {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+.category-area {
+    display: flex;
+    flex: 0 1 auto;
+    min-width: 250px;
+    height: 100%;
+}
+
+.category-wrapper {
+    background-color: rgba(255, 255, 255, 0.6);
+    padding: 16px;
+    width: 100%;    
+    overflow: auto;
+}
+
+.content-area {
+    display: flex;
+    flex: 10 1 auto;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.image-area {
+    > image-switcher {
+        opacity: 0.2;
+        .scale;
+    }
+}

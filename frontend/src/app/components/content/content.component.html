@@ -1,0 +1,16 @@
+<div class="main-container">
+    <div class="image-area">
+        <image-switcher class="bg-switcher" [image]="backgroundImage" *ngIf="backgroundImage"></image-switcher>
+        <image-switcher class="logo-switcher" [image]="logoImage" *ngIf="logoImage" size="20% auto"></image-switcher>
+    </div>
+    <div class="main-content-wrap">
+        <div class="category-area">
+            <div class="category-wrapper">
+                    <category-tree></category-tree>
+            </div>
+        </div>
+        <div class="content-area">
+            <router-outlet></router-outlet>
+        </div>
+    </div>
+</div>
