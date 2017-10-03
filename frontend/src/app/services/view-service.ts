@@ -3,6 +3,7 @@ import { CategoryTree, Index } from './interfaces';
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
+import { Subject } from 'rxjs/Subject';
 
 @Injectable()
 export class ViewService {
@@ -13,8 +14,8 @@ export class ViewService {
     public tree$ = new ReplaySubject<CategoryTree[]>(1);
     public background$ = new ReplaySubject<string>(1);
     public logo$ = new ReplaySubject<string>(1);
-    public catId$ = new ReplaySubject<number>(1);
-    public shipId$ = new ReplaySubject<number>(1);
+    public catId$ = new Subject<number>();
+    public shipId$ = new Subject<number>();
 
     private categoriesExpanded: Index<boolean>;
     private categoriesLocked: Index<boolean>;
@@ -27,6 +28,7 @@ export class ViewService {
     updateFromRoute(params: Params) {
         const catId = parseInt(params.categoryId, 10);
         const shpId = parseInt(params.shipId, 10);
+
         if (this.currentCategoryId === catId && this.currentShipId === shpId) {
             return;
         }

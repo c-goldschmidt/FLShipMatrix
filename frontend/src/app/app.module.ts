@@ -2,7 +2,7 @@ import { ShipRenderComponent } from './components/ship-detail/ship-render/ship-r
 import { ImageSwitcherComponent } from './components/image-switcher/image-switcher.component';
 import { ContentComponent } from './components/content/content.component';
 import { ViewService } from './services/view-service';
-import { ShipDetailService, CategoryService, StaticService } from './services/services';
+import { ShipDetailService, CategoryService, StaticService, TextureService } from './services/services';
 import { ShipDetailComponent } from './components/ship-detail/ship-detail.component';
 import { CategoryDetailComponent } from './components/category-detail/category-detail.component';
 import { NgModule } from '@angular/core';
@@ -51,6 +51,7 @@ const routes: Routes = [{
         CategoryService,
         ShipDetailService,
         StaticService,
+        TextureService,
     ],
     bootstrap: [ AppComponent ],
 })

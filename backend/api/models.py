@@ -205,7 +205,7 @@ class Texture(models.Model):
     def to_binary(self):
         data = struct.pack('I', self.ix)
         data += struct.pack('I', self.iy)
-        data += struct.pack('?', self.inversion)
+        data += struct.pack('I', 1 if self.inversion else 0)
         data += self.texture
 
         return data

@@ -1,3 +1,4 @@
+import { ShipTexture } from './ship-texture';
 import { Filter, ShipDetails, ShipListEntry, Category, CategoryTree, CategoryDetail, Dictionary } from './interfaces';
 import { Injectable } from '@angular/core';
 import { Http, Response, RequestOptions, ResponseContentType } from '@angular/http';
@@ -51,5 +52,17 @@ export class StaticService {
                 return this.cache[path];
             });
         }
+    }
+}
+
+@Injectable()
+export class TextureService {
+    constructor(private http: Http) {}
+
+    getTexture(texId: number) {
+        const options = {responseType: ResponseContentType.ArrayBuffer};
+        return this.http.get(`/api/textures/${texId}`, options).map((data: Response) => {
+            return new ShipTexture(data.arrayBuffer());
+        });
     }
 }

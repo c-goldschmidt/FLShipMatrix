@@ -12,9 +12,7 @@ export class ShipInfocardComponent implements OnChanges {
     public parsedHTML: string;
 
     ngOnChanges(changes: SimpleChanges): void {
-        console.log(changes);
         const ut = new InfocardUtils();
         this.parsedHTML = ut.xmlToHtml(this.rawData);
-        console.log(this.parsedHTML);
     }
 }

@@ -1,39 +1,53 @@
+import { Dictionary } from './../../../services/interfaces';
+import { ShipModel } from './../../../services/ship-model';
+import { Projection } from './projection';
+import { mat4 } from 'gl-matrix';
 import { GL } from './gl';
 import { StaticService } from './../../../services/services';
 
 type ProgramLoadedCallback = () => void;
 
 export class Program {
-    private vertexShader: WebGLShader;
-    private fragmentShader: WebGLShader;
-    private loadingShaders = 0;
+    protected vertexShader: WebGLShader;
+    protected fragmentShader: WebGLShader;
+    protected loadingShaders = 0;
+    protected _loaded = false;
+    protected additionalUniforms: Dictionary<WebGLUniformLocation>;
 
     public program: WebGLProgram;
-    public loaded = false;
 
     constructor(
         private staticServ: StaticService,
-        fragUrl: string, vertUrl: string,
     ) {
-        this.loadingShaders = 2;
-        this.fragmentShader = this.loadShader(fragUrl, GL.gl.FRAGMENT_SHADER);
-        this.vertexShader = this.loadShader(vertUrl, GL.gl.VERTEX_SHADER);
+        this.additionalUniforms = {};
+    }
 
-        if (this.loadingShaders === 0) {
-            this.loadProgram();
-        }
+    get loaded() {
+        return this._loaded;
     }
 
     destroy() {
+        this._loaded = false;
         GL.gl.deleteProgram(this.program);
         GL.gl.deleteShader(this.vertexShader);
         GL.gl.deleteShader(this.fragmentShader);
+        this.additionalUniforms = {};
     }
 
-    private loadProgram() {
-        this.program = GL.gl.createProgram();
+    use(index: number, projection: Projection) {
+        throw new Error('Not implemented');
+    }
 
-        console.log(this.vertexShader);
+    getAdditionalUniform(index: string) {
+        return this.additionalUniforms[index];
+    }
+
+    protected loadUniforms() {
+        throw new Error('Not implemented');
+    }
+
+    protected loadProgram() {
+        this.program = GL.gl.createProgram();
 
         GL.gl.attachShader(this.program, this.vertexShader);
         GL.gl.attachShader(this.program, this.fragmentShader);
@@ -42,11 +56,12 @@ export class Program {
         if (!GL.gl.getProgramParameter(this.program, GL.gl.LINK_STATUS)) {
             console.error('Error compiling program.');
         } else {
-            this.loaded = true;
+            this.loadUniforms();
+            this._loaded = true;
         }
     }
 
-    private loadShader(url: string, type = GL.gl.FRAGMENT_SHADER | GL.gl.VERTEX_SHADER): WebGLShader {
+    protected loadShader(url: string, type = GL.gl.FRAGMENT_SHADER | GL.gl.VERTEX_SHADER): WebGLShader {
         const shader = GL.gl.createShader(type);
 
         this.staticServ.getStatic(url).subscribe((source: string) => {

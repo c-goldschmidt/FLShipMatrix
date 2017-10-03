@@ -1,5 +1,6 @@
+import { Dictionary } from './../../services/interfaces';
 import { ViewService } from './../../services/view-service';
-import { ActivatedRoute, Params, Router } from '@angular/router';
+import { ActivatedRoute, Params, Router, Event, NavigationEnd } from '@angular/router';
 import { Component } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
@@ -17,7 +18,7 @@ export class ContentComponent {
     private sub: Subscription;
 
     constructor(private route: ActivatedRoute, private router: Router, private view: ViewService) {
-        router.events.subscribe(() => this.updateRoute());
+        router.events.subscribe((event) => this.updateRoute(event));
 
         view.background$.subscribe((newBG: string) => {
             this.backgroundImage = newBG;
@@ -27,16 +28,18 @@ export class ContentComponent {
         });
     }
 
-    updateRoute() {
-        const params = this.route.children.map((child: ActivatedRoute) =>  child.params);
+    updateRoute(event: Event) {
+        const paramArray = this.route.children.map((child: ActivatedRoute) =>  child.snapshot.params);
 
-        if (this.sub) {
-            this.sub.unsubscribe();
+        if (!(event instanceof NavigationEnd)) {
+            return;
         }
 
-        this.sub = Observable.combineLatest(this.route.params, ...params).subscribe((paramArray) => {
-            const params = paramArray.reduce((prev, curr) => Object.assign({}, prev, curr));
-            this.view.updateFromRoute(params);
-        });
+        let params: Dictionary<string> = {};
+        if (paramArray.length > 0) {
+            params = paramArray.reduce((prev, curr) => Object.assign({}, prev, curr));
+        }
+
+        this.view.updateFromRoute(params);
     }
 }

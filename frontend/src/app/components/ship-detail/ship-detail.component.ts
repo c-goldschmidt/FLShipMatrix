@@ -16,7 +16,7 @@ export class ShipDetailComponent implements OnDestroy {
     private ship: ShipDetails;
 
     public loading = true;
-    public showRender = false;
+    public showRender = true;
 
     constructor(private view: ViewService, serv: ShipDetailService) {
 

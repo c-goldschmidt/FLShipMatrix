@@ -1,8 +1,9 @@
+import { Subscription } from 'rxjs/Subscription';
 import { Renderer } from './renderer';
 import { ShipModel } from './../../../services/ship-model';
-import { ShipDetailService, StaticService } from './../../../services/services';
+import { ShipDetailService, StaticService, TextureService } from './../../../services/services';
 import { ShipDetails } from './../../../services/interfaces';
-import { Component, Input, ViewChild, ElementRef, OnChanges, DoCheck, OnDestroy } from '@angular/core';
+import { Component, Input, ViewChild, ElementRef, OnChanges, DoCheck, OnDestroy, SimpleChanges } from '@angular/core';
 
 @Component({
     selector: 'ship-render',
@@ -13,26 +14,31 @@ import { Component, Input, ViewChild, ElementRef, OnChanges, DoCheck, OnDestroy 
 export class ShipRenderComponent implements OnChanges, DoCheck, OnDestroy {
     private model: ShipModel;
     private renderer: Renderer;
+    private fpsSub: Subscription;
 
     @Input() ship: ShipDetails;
 
     public selectedLOD: string;
     public width = 1080;
     public height = 1080;
+    public fps = 0;
 
     @ViewChild('container') container: ElementRef;
     @ViewChild('canvas') canvas: ElementRef;
 
-    constructor(private shipDetais: ShipDetailService, private staticServ: StaticService) { }
+    constructor(
+        private shipDetais: ShipDetailService,
+        private staticServ: StaticService,
+        private texServ: TextureService,
+    ) { }
 
-    ngOnChanges() {
+    ngOnChanges(changes: SimpleChanges) {
         this.initRender();
 
         this.selectedLOD = this.ship.lods.sort()[0];
         this.shipDetais.getModel(this.ship.id, this.selectedLOD).subscribe((model: ShipModel) => {
             model.id = this.ship.id;
             model.lod = this.selectedLOD;
-            console.log(model.id);
 
             this.model = model;
             this.renderer.model = this.model;
@@ -51,12 +57,14 @@ export class ShipRenderComponent implements OnChanges, DoCheck, OnDestroy {
     }
 
     ngOnDestroy() {
+        this.fpsSub.unsubscribe();
         this.renderer.destroy();
     }
 
     initRender() {
         if (!this.renderer) {
-            this.renderer = new Renderer(this.canvas.nativeElement, this.staticServ);
+            this.renderer = new Renderer(this.canvas.nativeElement, this.staticServ, this.texServ);
+            this.fpsSub = this.renderer.fps$.subscribe((fps: number) => this.fps = fps);
         }
     }
 }

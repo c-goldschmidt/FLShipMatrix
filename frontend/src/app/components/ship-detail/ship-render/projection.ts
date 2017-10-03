@@ -1,5 +1,7 @@
+import { LineProgram } from './line-program';
+import { RenderConstants } from './constants';
 import { GL } from './gl';
-import { mat4 } from 'gl-matrix';
+import { mat4, vec3 } from 'gl-matrix';
 
 export interface BoundingBox {
     min: [number, number, number];
@@ -10,13 +12,23 @@ export class Projection {
     private lastX: number;
     private lastY: number;
     private mouse = false;
+    private autoRotate = true;
+    private mode: 'rotate' | 'move';
+    private bounds: BoundingBox;
+
+    private fov = 45;
+    private zFar = 1000;
+
+    private vertexBuffer: WebGLBuffer;
+    private indexBuffer: WebGLBuffer;
 
     public projectionMatrix: mat4;
     public modelViewMatrix: mat4;
     public normalMatrix: mat4;
+    public boundingMatrix: mat4;
 
-    public rotationX = Math.PI;
-    public rotationY = 0;
+    public rotationX = 135 * (Math.PI / 180);
+    public rotationY = -10 * (Math.PI / 180);
     public rotationZ = 0;
 
     public camX = 0;
@@ -32,13 +44,54 @@ export class Projection {
     }
 
     set boundingBox(vertexBuffer: Float32Array[]) {
-        const bounds = this.calculateBoundingBox(vertexBuffer);
+        this.bounds = this.calculateBoundingBox(vertexBuffer);
 
-        console.log(bounds);
+        this.setCameraOffset();
+        this.calculateBoundingMatrix();
+    }
 
-        this.camX = 0; // (bounds.min[0] + bounds.max[0]) / 2;
-        this.camY = 0; // (bounds.min[1] + bounds.max[1]) / 2;
-        this.camZ = bounds.min[2] - 10;
+    private setCameraOffset() {
+        const maxBoxSize = Math.max(
+            this.bounds.max[0] - this.bounds.min[0],
+            this.bounds.max[1] - this.bounds.min[1],
+        );
+        this.camZ = -((maxBoxSize / (2 * Math.tan(this.fov / 2)))) + this.bounds.min[2];
+        this.camX = (this.bounds.min[0] + this.bounds.max[0]) / 2;
+        this.camY = (this.bounds.min[1] + this.bounds.max[1]) / 2;
+
+        const extremes = [
+            this.bounds.max[0],
+            Math.abs(this.bounds.min[0]),
+            this.bounds.max[1],
+            Math.abs(this.bounds.min[1]),
+            this.bounds.max[2],
+            Math.abs(this.bounds.min[2]),
+        ].sort();
+        this.zFar = Math.max(
+            Math.sqrt(Math.pow(extremes[0], 2) * Math.pow(extremes[1], 2)) * 2,
+            1000,
+        );
+    }
+
+    private calculateBoundingMatrix() {
+        const size = vec3.fromValues(
+            this.bounds.max[0] - this.bounds.min[0],
+            this.bounds.max[1] - this.bounds.min[1],
+            this.bounds.max[2] - this.bounds.min[2],
+        );
+        const center = vec3.fromValues(
+            (this.bounds.max[0] + this.bounds.min[0]) / 2,
+            (this.bounds.max[1] + this.bounds.min[1]) / 2,
+            (this.bounds.max[2] + this.bounds.min[2]) / 2,
+        );
+
+        const output = mat4.create();
+        mat4.identity(output);
+
+        mat4.translate(output, output, center);
+        mat4.scale(output, output, size);
+        // mat4.multiply(multiplied, translated, scaled)
+        this.boundingMatrix = output;
     }
 
     private calculateBoundingBox(vertices: Float32Array[]): BoundingBox {
@@ -65,10 +118,10 @@ export class Projection {
     }
 
     private createMatrices() {
-        const fieldOfView = 45 * Math.PI / 180;   // in radians
+        const fieldOfView = this.fov * Math.PI / 180;   // in radians
         const aspect = GL.gl.canvas.clientWidth / GL.gl.canvas.clientHeight;
-        const zNear = 0.01;
-        const zFar = 1000.0;
+        const zNear = 1;
+        const zFar = this.zFar;
 
         this.projectionMatrix = mat4.create();
         mat4.perspective(this.projectionMatrix, fieldOfView, aspect, zNear, zFar);
@@ -105,6 +158,10 @@ export class Projection {
         this.normalMatrix = mat4.create();
         mat4.invert(this.normalMatrix, this.modelViewMatrix);
         mat4.transpose(this.normalMatrix, this.normalMatrix);
+
+        if (this.autoRotate) {
+            this.rotationX += 0.01;
+        }
     }
 
     private normalizeAngle(angle: number) {
@@ -118,26 +175,38 @@ export class Projection {
     }
 
     private registerEvents() {
-        this.canvas.onmousedown = () => this.handleMouseDown();
-        this.canvas.onmouseup = () => this.handleMouseUp();
-        this.canvas.onmouseleave = () => this.handleMouseUp();
-        this.canvas.onmouseout = () => this.handleMouseUp();
+        this.canvas.onmousedown = (event: MouseEvent) => this.handleMouseDown(event);
+        this.canvas.onmouseup = (event: MouseEvent) => this.handleMouseUp(event, true);
+        this.canvas.onmouseleave = (event: MouseEvent) => this.handleMouseUp(event);
+        this.canvas.onmouseout = (event: MouseEvent) => this.handleMouseUp(event);
         this.canvas.onmousemove = (event: MouseEvent) => this.handleMouseMove(event);
         this.canvas.onmousewheel = (event: MouseWheelEvent) => this.handleWheel(event);
+        this.canvas.oncontextmenu = (event: MouseEvent) => this.prevent(event);
     }
 
-    private handleMouseDown() {
+    private prevent(event: Event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    private handleMouseDown(event: MouseEvent) {
+        this.prevent(event);
         this.mouse = true;
+        this.autoRotate = false;
+        this.mode = event.button === 0 ? 'rotate' : 'move';
     }
 
-    private handleMouseUp() {
+    private handleMouseUp(event: MouseEvent, prevent = false) {
+        if (prevent) {
+            this.prevent(event);
+        }
         this.mouse = false;
         this.lastX = undefined;
         this.lastY = undefined;
     }
 
     private handleWheel(event: MouseWheelEvent) {
-        const delta = event.deltaY / 1000;
+        const delta = event.deltaY / 100;
         this.camZ += delta;
     }
 
@@ -149,11 +218,16 @@ export class Projection {
             return;
         }
 
-        const deltaX = (event.pageX - this.lastX) / 100;
-        const deltaY = (event.pageY - this.lastY) / 100;
+        const deltaX = (event.pageX - this.lastX);
+        const deltaY = (event.pageY - this.lastY);
 
-        this.rotationX += deltaX;
-        this.rotationY -= deltaY;
+        if (this.mode === 'rotate') {
+            this.rotationX += deltaX / 100;
+            this.rotationY -= deltaY / 100;
+        } else {
+            this.camX +=  deltaX / 20;
+            this.camY -=  deltaY / 20;
+        }
 
         this.lastX = event.pageX;
         this.lastY = event.pageY;

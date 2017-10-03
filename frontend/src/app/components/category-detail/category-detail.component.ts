@@ -16,8 +16,6 @@ export class CategoryDetailComponent implements OnDestroy {
 
     constructor(private view: ViewService, serv: CategoryService) {
         this.sub = view.catId$.subscribe((catId) => {
-            console.log('new cat: ', catId);
-
             this.loading = true;
             serv.getCategoryDetail(catId).subscribe((category) => {
                 this.category = category;

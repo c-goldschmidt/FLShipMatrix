@@ -1,0 +1,16 @@
+backend/env
+frontend/node_modules
+**/__pycache__
+.vagrant
+.vscode
+Vagrantfile
+backend.sh
+frontend.sh
+provision.sh
+importer/output.zip
+backend/static/ng
+backend/static/js
+backend/static/logos
+backend/static/backgrounds
+*.sqlite3
+importer/importer/pyfl_utils
