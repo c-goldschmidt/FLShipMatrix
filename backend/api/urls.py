@@ -11,5 +11,5 @@ urlpatterns = [
     url(r'^{}/ships$'.format(category_rx), ShipListView.as_view()),
     url(r'^{}$'.format(ship_rx), ShipDetailsView.as_view()),
     url(r'^{}/model/(?P<lod_name>.+)$'.format(ship_rx), ShipModelsView.as_view()),
-    url(r'^textures/(?P<tex_id>\d+)$', ShipTexturesView.as_view()),
+    url(r'^{}/textures/(?P<tex_id>\d+)$'.format(ship_rx), ShipTexturesView.as_view()),
 ]

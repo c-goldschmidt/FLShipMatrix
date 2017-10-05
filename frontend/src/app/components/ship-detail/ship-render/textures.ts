@@ -46,7 +46,7 @@ export class Textures {
             // create temporary texture
             this.createEmptyTexture(texId);
 
-            this.textureService.getTexture(texId).subscribe((data: ShipTexture) => {
+            this.textureService.getTexture(this.model.id, texId).subscribe((data: ShipTexture) => {
                 this.loadTexture(texId, data);
             }, () => {
                 console.error('error loading texture', texId);

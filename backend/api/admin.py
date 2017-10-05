@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import admin
 from django.db.models import TextField, CharField
 
-from api.models import ShipCategory, Ship, ShipModelLOD, Texture
+from api.models import ShipCategory, Ship, ShipModelLOD, Texture, TexturePack
 
 
 class ShipCategoryAdmin(admin.ModelAdmin):
@@ -38,6 +38,15 @@ class ShipModelLODAdmin(admin.ModelAdmin):
     list_display = ('ship', 'lod_name', )
 
 
+class TexturePackAdmin(admin.ModelAdmin):
+    model = TexturePack
+
+    fields = ('pack_id', )
+    readonly_fields = ('pack_id', )
+    ordering = ('pack_id', )
+    list_display = ('pack_id', )
+
+
 class TextureAdmin(admin.ModelAdmin):
     model = Texture
 
@@ -49,5 +58,6 @@ class TextureAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Texture, TextureAdmin)
+admin.site.register(TexturePack, TexturePackAdmin)
 admin.site.register(ShipModelLOD, ShipModelLODAdmin)
 admin.site.register(Ship, ShipAdmin)

@@ -10,19 +10,23 @@ class ModelEncoder(object):
         self.lods = model_data['lods']
     
     def write_to_zip(self, zf):
-
+        inventory = []
         for lod_name in self.lods:
-            self._write_lod_file(zf, lod_name)
+            inventory += self._write_lod_file(zf, lod_name)
         
         self.data = None
+        return inventory
         
     def _write_lod_file(self, zf, lod_name):
         type_name = 'uvs'
 
-        self._write_uv_vert(zf, lod_name, 'uvs', self.data['uvs'])
-        self._write_uv_vert(zf, lod_name, 'vertices', self.data['vertices'])
-        self._write_normals(zf, lod_name)
-        self._write_mat_ids(zf, lod_name)
+        inventory = []
+        inventory.append(self._write_uv_vert(zf, lod_name, 'uvs', self.data['uvs']))
+        inventory.append(self._write_uv_vert(zf, lod_name, 'vertices', self.data['vertices']))
+        inventory.append(self._write_normals(zf, lod_name))
+        inventory.append(self._write_mat_ids(zf, lod_name))
+
+        return inventory
 
     def _write_uv_vert(self, zf, lod_name, type_name, data):
         filename = '{}.{}.{}.dat'.format(self.import_id, type_name, lod_name.lower())
@@ -36,6 +40,7 @@ class ModelEncoder(object):
             content += struct.pack('f' * length, *entry)
 
         zf.writestr(filename, content)
+        return filename
 
     def _write_normals(self, zf, lod_name):
         filename = '{}.{}.{}.dat'.format(self.import_id, 'normals', lod_name.lower())
@@ -50,6 +55,7 @@ class ModelEncoder(object):
                 content += struct.pack('f' * 3, *normal)
 
         zf.writestr(filename, content)
+        return filename
 
     def _write_mat_ids(self, zf, lod_name):
         filename = '{}.{}.{}.dat'.format(self.import_id, 'materials', lod_name.lower())        
@@ -58,14 +64,18 @@ class ModelEncoder(object):
         content = struct.pack('I' * len(mat_ids), *mat_ids)
 
         zf.writestr(filename, content)
+        return filename
 
 class TextureEncoder(object):
-    def __init__(self, textures):
+    def __init__(self, pack_id, textures):
         self.textures = textures
+        self.pack_id = pack_id
 
     def write_to_zip(self, zf):
+        inventory = []
         for tex_id, tex in self.textures.items():
-            filename = '{}.tex'.format(tex_id)
+            filename = '{}.{}.tex'.format(self.pack_id, tex_id)
+            inventory.append(filename)
 
             content = struct.pack('I', tex.ix)
             content += struct.pack('I', tex.iy)
@@ -75,3 +85,4 @@ class TextureEncoder(object):
             zf.writestr(filename, content)
         
         self.textures = None
+        return inventory

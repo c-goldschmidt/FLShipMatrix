@@ -59,9 +59,9 @@ export class StaticService {
 export class TextureService {
     constructor(private http: Http) {}
 
-    getTexture(texId: number) {
+    getTexture(shipId: number, texId: number) {
         const options = {responseType: ResponseContentType.ArrayBuffer};
-        return this.http.get(`/api/textures/${texId}`, options).map((data: Response) => {
+        return this.http.get(`/api/ships/${shipId}/textures/${texId}`, options).map((data: Response) => {
             return new ShipTexture(data.arrayBuffer());
         });
     }

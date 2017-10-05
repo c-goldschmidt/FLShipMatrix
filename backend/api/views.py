@@ -32,8 +32,9 @@ class ShipModelsView(View):
 
 
 class ShipTexturesView(View):
-    def get(self, request, tex_id, *args, **kwargs):
-        texture = get_object_or_404(Texture, tex_id=tex_id)
+    def get(self, request, ship_id, tex_id, *args, **kwargs):
+        ship = get_object_or_404(Ship, id=ship_id)
+        texture = get_object_or_404(Texture, tex_id=tex_id, texture_pack__in=ship.textures.all())
         return BinaryResponse(texture.to_binary())
 
 

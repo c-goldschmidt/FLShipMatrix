@@ -29,6 +29,8 @@ class ShipDataImporter(object):
     ]
 
     def __init__(self, args):
+        self.mat_map = {}
+
         fl_ini = os.path.join(args.root, 'EXE', 'freelancer.ini')
         if not os.path.isfile(fl_ini):
             raise ParserError('could not find freelancer.ini in EXE folder')
@@ -40,7 +42,7 @@ class ShipDataImporter(object):
 
     def run_import(self):
         self.timer = Timer(_logger.info)
-        self.timer.step('started')
+        self.timer.start()
 
         ships_data = self._get_ships()
         self.timer.step('data parsed')
@@ -55,27 +57,30 @@ class ShipDataImporter(object):
 
         buffer = BytesIO()
         with ZipFile('output.zip', mode='w', compression=ZIP_DEFLATED) as zf:
+            self.timer.start()
             zf.writestr('data.json', content)
             self.timer.step('main ship data saved to zip')
 
+            inventory = []
             for data_file in self.data_files:
-                data_file.write_to_zip(zf)
+                inventory += data_file.write_to_zip(zf)
 
-            self.timer.step('datafiles saved')
-        
-        self.timer.done('ALL DONE!')
+            zf.writestr('inventory.json', json.dumps(inventory))
+
+            self.timer.stop('datafiles saved')
+        self.timer.stop('ALL DONE!')
         
     def _get_ships(self):
+        self.timer.start()
         ships = self.config.goods.get_by_kv('category', 'ship')
 
         result_dict = {
             'ships': {},
         }
-        material_ids = []
-        texture_paths = []
-        
+
         import_id = 0
         for ship in ships:
+            self.timer.start()
             hull_name = ship.get('hull')
             hull = self.config.goods.get_by_kv('nickname', hull_name, multiple=False)
 
@@ -84,17 +89,14 @@ class ShipDataImporter(object):
                 'price': hull.get('price'),
             }
             self._get_ship_info(result_dict['ships'][import_id], ship_name)
-            mat, tex = self._get_model(result_dict['ships'][import_id], ship_name, import_id)
+            self._get_model(result_dict['ships'][import_id], ship_name, import_id)
 
-            material_ids = concat_lists(material_ids, mat)
-            texture_paths = concat_lists(texture_paths, tex)
-
-            self.timer.step('ship {} parsed'.format(ship_name))
+            self.timer.stop('ship {} parsed'.format(ship_name))
             import_id += 1
 
         self.timer.step('all ships parsed')
-        self._get_textures(material_ids, texture_paths, result_dict)
-        self.timer.step('textures parsed')
+        self._get_textures(result_dict)
+        self.timer.stop('textures parsed')
 
         return result_dict
 
@@ -135,27 +137,63 @@ class ShipDataImporter(object):
         }
         result_dict['model_data'] = {'lods': model.get_lod_levels()}
 
+        self.mat_map[import_id] = {
+            'paths': concat_lists(shiparch_entry.get('material_library'), []),
+            'ids': model.material_ids,
+        }
+
         self.data_files.append(ModelEncoder(ship_name, import_id, model_data))
         self._get_hardpoints(result_dict, utf)
-
-        mat_paths = shiparch_entry.get('material_library')
-        return model.material_ids, mat_paths
 
     def _get_hardpoints(self, result_dict, model):
         hp_parser = HardpointParser(model, self)
         result_dict['hardpoints'] = hp_parser.hardpoints
 
-    def _get_textures(self, material_ids, texture_paths, result_dict):
-        material_ids = list(set(material_ids))
-        texture_paths = list(set(texture_paths))
-        texture_paths = [self.config.get_absolute_path('data', path) for path in texture_paths]
+    def _get_path_map(self):
+        path_map = {}
+        for import_id, path in self._iterate_paths():
+            abs_path = self.config.get_absolute_path('data', path)
 
-        textures = [UTFFile(path) for path in texture_paths]
-        
-        full_pack = TexturePack(material_ids, textures, self)
-        self.data_files.append(TextureEncoder(full_pack.get_textures()))
-        
-        result_dict['texture_ids'] = material_ids
+            if abs_path not in path_map:
+                path_map[abs_path] = {
+                    'file': UTFFile(abs_path),
+                    'ids': self.mat_map[import_id]['ids'],
+                    'import_ids': [import_id],
+                }
+            else:
+                path_map[abs_path]['ids'] += self.mat_map[import_id]['ids']
+                path_map[abs_path]['import_ids'].append(import_id)
+        return path_map
+
+    def _iterate_paths(self):
+        for import_id in self.mat_map:
+            for path in self.mat_map[import_id]['paths']:
+                yield import_id, path
+
+
+    def _get_textures(self, result_dict):
+        path_map = self._get_path_map()
+
+        pack_id = 0
+        result_dict['texture_ids'] = {}
+        for path in path_map:
+            material_ids = list(set(path_map[path]['ids']))
+
+            full_pack = TexturePack(material_ids, [path_map[path]['file']], self)
+            textures = full_pack.get_textures()
+
+            if len(textures.keys()) == 0:
+                continue
+
+            self.data_files.append(TextureEncoder(pack_id, textures))
+
+            for import_id in path_map[path]['import_ids']:
+                if result_dict['ships'][import_id].get('texture_pack_ids') is None:
+                    result_dict['ships'][import_id]['texture_pack_ids'] = []
+                result_dict['ships'][import_id]['texture_pack_ids'].append(pack_id)
+
+            result_dict['texture_ids'][pack_id] = list(textures.keys())
+            pack_id += 1
 
     def status(self, message):
         _logger.info(message)

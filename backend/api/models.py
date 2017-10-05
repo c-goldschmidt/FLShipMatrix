@@ -35,6 +35,7 @@ class ShipCategory(models.Model):
         indexes = [
             models.Index(fields=['parent_category']),
         ]
+        ordering = ['parent_category_id', 'name']
 
     def to_dict(self, tree=False):
         result = {
@@ -84,6 +85,13 @@ class ShipCategory(models.Model):
         return self.name
 
 
+class TexturePack(models.Model):
+    pack_id = models.IntegerField()
+
+    def __str__(self):
+        return 'TexturePack {}'.format(self.pack_id)
+
+
 class Ship(models.Model):
     name = models.CharField(max_length=64)
     infocard = models.TextField()
@@ -94,6 +102,8 @@ class Ship(models.Model):
         blank=True,
         null=True,
     )
+    
+    textures = models.ManyToManyField(TexturePack)
 
     # full info
     max_bats = models.IntegerField()
@@ -196,6 +206,12 @@ class Texture(models.Model):
     iy = models.IntegerField()
     inversion = models.BooleanField()
     texture = models.BinaryField()
+    texture_pack = models.ForeignKey(
+        TexturePack, 
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
 
     class Meta:
         indexes = [
