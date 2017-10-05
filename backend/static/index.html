@@ -1,7 +1,8 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="">
     <head>
+        {% load static %}
+        {% load devmode %}
         <base href="/" />
         <title>FLShipMatrix : New Universe</title>
 
@@ -16,7 +17,11 @@
     <body>
         <app>Loading...</app>
     </body>
-
-    <script src="{% static 'ng/polyfills.js' %}"></script>
-    <script src="{% static 'ng/app.js' %}"></script>
+    {% if  devmode %}
+        <script src="{% static 'ng/polyfills.js' %}"></script>
+        <script src="{% static 'ng/app.js' %}"></script>
+    {% else %}
+        <script src="{% static 'js/polyfills.min.js' %}"></script>
+        <script src="{% static 'js/app.min.js' %}"></script>
+    {% endif %}
 </html>

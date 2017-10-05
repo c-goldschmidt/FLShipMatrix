@@ -30,12 +30,9 @@ module.exports = webpackMerge(commonConfig, {
         new AotPlugin({
             tsConfigPath: "src/tsconfig.json",
             skipCodeGeneration: false,
-            locale: language,
-            i18nFile: helpers.root('src/locale/messages.' + language + '.xlf'),
-            i18nFormat: 'xlf',
             mainPath: helpers.root('src/main.ts'), // path must be absolute!
         }),
-        new webpack.NoEmitOnErrorsPlugin(),
+        new webpack.NoEmitOnErrorsPlugin(),        
         new webpack.optimize.UglifyJsPlugin({ // https://github.com/angular/angular/issues/10618
             mangle: {
                 keep_fnames: true
