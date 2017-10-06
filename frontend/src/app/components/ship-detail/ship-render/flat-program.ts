@@ -19,8 +19,8 @@ export class FlatProgram extends Program {
     ) {
         super(staticServ);
         this.loadingShaders = 2;
-        this.fragmentShader = this.loadShader('/static/shaders/flat.frag', GL.gl.FRAGMENT_SHADER);
-        this.vertexShader = this.loadShader('/static/shaders/flat.vert', GL.gl.VERTEX_SHADER);
+        this.fragmentShader = this.loadShader('static/shaders/flat.frag', GL.gl.FRAGMENT_SHADER);
+        this.vertexShader = this.loadShader('static/shaders/flat.vert', GL.gl.VERTEX_SHADER);
 
         this.textures = new Textures(this, model, textureService);
 

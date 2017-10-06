@@ -17,7 +17,11 @@
     <body>
         <app>Loading...</app>
     </body>
-    {% if  devmode %}
+    <script>
+        FL_URL_PREFIX = '{% setting "FL_PATH_PREFIX" %}';
+    </script>
+    {% setting "IS_DEV_MODE" as devmode_flag %}
+    {% if devmode_flag %}
         <script src="{% static 'ng/polyfills.js' %}"></script>
         <script src="{% static 'ng/app.js' %}"></script>
     {% else %}

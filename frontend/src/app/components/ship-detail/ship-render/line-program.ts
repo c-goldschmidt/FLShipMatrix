@@ -13,8 +13,8 @@ export class LineProgram extends Program {
     ) {
         super(staticServ);
         this.loadingShaders = 2;
-        this.fragmentShader = this.loadShader('/static/shaders/line.frag', GL.gl.FRAGMENT_SHADER);
-        this.vertexShader = this.loadShader('/static/shaders/line.vert', GL.gl.VERTEX_SHADER);
+        this.fragmentShader = this.loadShader('static/shaders/line.frag', GL.gl.FRAGMENT_SHADER);
+        this.vertexShader = this.loadShader('static/shaders/line.vert', GL.gl.VERTEX_SHADER);
 
         if (this.loadingShaders === 0) {
             this.loadProgram();

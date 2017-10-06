@@ -26,7 +26,7 @@ SECRET_KEY = '535ook!)nx^%6+1)mpzy&1kkow_wktxq$lv3-k4g&dz&@hb(gk'
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
+FL_PATH_PREFIX = os.environ.get('FL_PATH_PREFIX', '/')
 
 # Application definition
 
@@ -121,7 +121,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = '{}static/'.format(FL_PATH_PREFIX)
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),
     os.path.abspath(os.path.join(BASE_DIR, '..', 'frontend', 'dist')),
