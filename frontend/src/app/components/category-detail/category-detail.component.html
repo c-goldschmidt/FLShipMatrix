@@ -16,7 +16,7 @@
             <span class="td">{{ ship.price | number }} cr</span>
             <span class="td" *ngIf="!category.is_leaf">{{ ship.category.path }}</span>
             <span class="td">
-                <a [routerLink]="['/category', ship.category.id, 'ship', ship.id]">
+                <a [routerLink]="['/fl/category', ship.category.id, 'ship', ship.id]">
                     View more details ==>
                 </a>
             </span>            

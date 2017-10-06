@@ -36,6 +36,6 @@ export class CategoryTreeComponent implements AfterViewInit {
     }
 
     navigateTo(catId: number) {
-        this.router.navigate(['category', catId]);
+        this.router.navigate(['/fl/category', catId]);
     }
 }

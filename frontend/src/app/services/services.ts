@@ -7,20 +7,19 @@ import 'rxjs/add/operator/map';
 import 'rxjs/add/observable/of';
 
 import { ShipModel } from './ship-model';
-
-declare const FL_URL_PREFIX: string;
+import { Constants } from '../constants';
 
 @Injectable()
 export class ShipDetailService {
     constructor(private http: Http) {}
 
     getShipDetails(shipId: number): Observable<ShipDetails> {
-        return this.http.get(`${FL_URL_PREFIX}api/ships/${shipId}`).map((res: Response) => res.json());
+        return this.http.get(`${Constants.getPrefix()}api/ships/${shipId}`).map((res: Response) => res.json());
     }
 
     getModel(shipId: number, lodName: string): Observable<ShipModel> {
         const options = {responseType: ResponseContentType.ArrayBuffer};
-        return this.http.get(`${FL_URL_PREFIX}api/ships/${shipId}/model/${lodName}`, options).map(
+        return this.http.get(`${Constants.getPrefix()}api/ships/${shipId}/model/${lodName}`, options).map(
             (res: Response) => new ShipModel(res.arrayBuffer()),
         )
     }
@@ -32,11 +31,11 @@ export class CategoryService {
     constructor(private http: Http) {}
 
     getCategoryTree(): Observable<CategoryTree[]> {
-        return this.http.get(`${FL_URL_PREFIX}api/categories`).map((res: Response) => res.json());
+        return this.http.get(`${Constants.getPrefix()}api/categories`).map((res: Response) => res.json());
     }
 
     getCategoryDetail(categoryId: number): Observable<CategoryDetail> {
-        return this.http.get(`${FL_URL_PREFIX}api/categories/${categoryId}`).map((res: Response) => res.json());
+        return this.http.get(`${Constants.getPrefix()}api/categories/${categoryId}`).map((res: Response) => res.json());
     }
 }
 
@@ -46,7 +45,7 @@ export class StaticService {
     constructor(private http: Http) {}
 
     getStatic(path: string): Observable<string> {
-        path = `${FL_URL_PREFIX}${path}`;
+        path = `${Constants.getPrefix()}${path}`;
         if (this.cache[path]) {
             return Observable.of(this.cache[path]);
         } else {
@@ -64,8 +63,10 @@ export class TextureService {
 
     getTexture(shipId: number, texId: number) {
         const options = {responseType: ResponseContentType.ArrayBuffer};
-        return this.http.get(`${FL_URL_PREFIX}api/ships/${shipId}/textures/${texId}`, options).map((data: Response) => {
-            return new ShipTexture(data.arrayBuffer());
-        });
+        return this.http.get(`${Constants.getPrefix()}api/ships/${shipId}/textures/${texId}`, options)
+            .map((data: Response) => {
+                return new ShipTexture(data.arrayBuffer());
+            },
+        );
     }
 }

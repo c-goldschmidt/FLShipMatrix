@@ -13,9 +13,10 @@ import { EmptyComponent } from './components/empty-component/empty.component';
 import { CategoryTreeComponent } from './components/category-tree/category-tree.component';
 import { HttpModule } from '@angular/http';
 import { ShipInfocardComponent } from './components/ship-detail/ship-infocard/ship-infocard.component';
+import { Constants } from './constants'
 
 const routes: Routes = [{
-    path: '',
+    path: 'fl',
     component: ContentComponent,
     children: [{
         path: 'category/:categoryId',
@@ -27,6 +28,9 @@ const routes: Routes = [{
         path: '*',
         component: EmptyComponent,
     }],
+}, {
+    path: '*',
+    redirectTo: '/fl/',
 }];
 
 @NgModule({
