@@ -20,8 +20,9 @@ from django.conf.urls.static import static
 
 from django.views.generic import TemplateView
 
+prefix = settings.FL_PATH_PREFIX[1:]
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
-    url(r'^api/', include('api.urls')),
+    url(r'^{}admin/'.format(prefix), admin.site.urls),
+    url(r'^{}api/'.format(prefix), include('api.urls')),
     url(r'^.*$', TemplateView.as_view(template_name='index.html')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
