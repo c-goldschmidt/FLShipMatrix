@@ -43,7 +43,6 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'flmatrix.urls'
 
-IS_DEV_MODE = False
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -111,12 +110,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 INTERNAL_STATIC_URL = '/static/'
-STATIC_URL = '{}/static/'.format(FL_PATH_PREFIX)
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'),
-)
+STATIC_URL = '{}static/'.format(FL_PATH_PREFIX)
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+if ENABLE_STATIC_DEV:
+    STATICFILES_DIRS = (
+         os.path.join(BASE_DIR, 'static'),
+    )
+else:
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',

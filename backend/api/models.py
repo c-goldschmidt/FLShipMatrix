@@ -62,7 +62,10 @@ class ShipCategory(models.Model):
             'children': []
         }
 
-        for node in nodes_by_id.values():
+        sorted_nodes = list(nodes_by_id.values())
+        sorted_nodes.sort(key=lambda x: x['path'])
+
+        for node in sorted_nodes:
             if node['parent_id'] is None:
                 root['children'].append(node)
             else:
