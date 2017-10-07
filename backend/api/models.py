@@ -19,13 +19,13 @@ class ShipCategory(models.Model):
     )
 
     background_image = models.ImageField(
-        upload_to='backgrounds/',
+        upload_to='static/backgrounds/',
         blank=True,
         null=True,
     )
 
     logo = models.ImageField(
-        upload_to='logos/',
+        upload_to='static/logos/',
         blank=True,
         null=True,
     )
@@ -40,7 +40,7 @@ class ShipCategory(models.Model):
 
     @staticmethod
     def _get_path(element):
-        return '{}static/{}'.format(settings.FL_PATH_PREFIX, element)
+        return '{}{}'.format(settings.FL_PATH_PREFIX, element)
 
     def to_dict(self, tree=False):
         result = {

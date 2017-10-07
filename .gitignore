@@ -13,6 +13,8 @@ backend/static/ng
 backend/static/js
 backend/static/logos
 backend/static/backgrounds
+backend/static/admin
 backend/flmatrix/local.py
+backend/media
 *.sqlite3
 importer/importer/pyfl_utils
