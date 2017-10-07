@@ -1,5 +1,3 @@
-import { Category } from './interfaces';
-
 export interface Pagination {
     page: number,
     itemsPerPage: number,

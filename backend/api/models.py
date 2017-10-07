@@ -2,6 +2,7 @@ import struct
 
 from collections import defaultdict
 from django.db import models
+from django.conf import settings
 
 
 class ShipCategory(models.Model):
@@ -37,14 +38,18 @@ class ShipCategory(models.Model):
         ]
         ordering = ['parent_category_id', 'name']
 
+    @staticmethod
+    def _get_path(element):
+        return '{}static/{}'.format(settings.FL_PATH_PREFIX, element)
+
     def to_dict(self, tree=False):
         result = {
             'id': self.id,
             'name': self.name,
             'path': str(self),
             'description': self.description,
-            'background': '/static/' + self.background_image.url if self.background_image else None,
-            'logo': '/static/' + self.logo.url if self.logo else None,
+            'background': self._get_path(self.background_image) if self.background_image else None,
+            'logo': self._get_path(self.logo) if self.logo else None,
         }
 
         if tree:
@@ -54,12 +59,29 @@ class ShipCategory(models.Model):
         return result
     
     @staticmethod
+    def get_null_category_dict(tree = False):
+        result = {
+            'id': 0,
+            'name': 'Uncathegorized',
+            'path': 'Uncathegorized',
+            'description': 'Ships that are not yet categorized',
+            'background': None,
+            'logo': None,
+            'children': [],
+            'parent_id': None,
+        }
+
+        if tree:
+            result['parent_id'] = None
+            result['children'] = []
+
+        return result
+
+    @staticmethod
     def get_tree():
         nodes_by_id = {node.id: node.to_dict(True) for node in ShipCategory.objects.iterator()}
         root = {
-            'name': 'root',
-            'description': 'the root node',
-            'children': []
+            'children': [],
         }
 
         sorted_nodes = list(nodes_by_id.values())
@@ -70,6 +92,8 @@ class ShipCategory(models.Model):
                 root['children'].append(node)
             else:
                 nodes_by_id[node['parent_id']]['children'].append(node)
+
+        root['children'].append(ShipCategory.get_null_category_dict(True))
 
         return root['children']
     
@@ -143,7 +167,7 @@ class Ship(models.Model):
             'id': self.id,
             'name': self.name,
             'price': self.price,
-            'category': self.category.to_dict() if self.category else None,
+            'category': self.category.to_dict() if self.category else ShipCategory.get_null_category_dict(),
         }
 
         if not extended:

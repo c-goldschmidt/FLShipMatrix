@@ -55,7 +55,7 @@ class CategoryDetailView(View):
 
         return sub_cats
 
-    def get(self, request, category_id=None):
+    def _get_ships(self, category_id):
         category = get_object_or_404(ShipCategory, id=category_id)
         
         cat_ids = self._get_children([category_id])
@@ -67,3 +67,14 @@ class CategoryDetailView(View):
 
         return  JSONResponse(cat_dict)
 
+    def _get_uncategorized_ships(self):
+        cat_dict = ShipCategory.get_null_category_dict()
+        cat_dict['ships'] = [ship.to_dict() for ship in Ship.objects.filter(category_id__isnull=True)]
+        cat_dict['is_leaf'] = True
+
+        return  JSONResponse(cat_dict)
+
+    def get(self, request, category_id=None):
+        if category_id == '0' or category_id is None:
+            return self._get_uncategorized_ships()
+        return self._get_ships(category_id)

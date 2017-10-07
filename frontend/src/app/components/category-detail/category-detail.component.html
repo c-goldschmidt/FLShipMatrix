@@ -3,12 +3,19 @@
 
     <div class="ship-list table">
         <div class="tr header">
-            <span class="td">Name</span>
-            <span class="td">Price</span>
-            <span class="td" *ngIf="!category.is_leaf">Category</span>
+            <span class="td">
+                <span class="sorting" (click)="setSort('name')" [class.active]="sorting == 'name'">Name</span>
+                <input class="search-box" type="text" [(ngModel)]="searchString" (keyup)="filterShips()" placeholder="Search">
+            </span>
+            <span class="td">
+                <span class="sorting" (click)="setSort('price')" [class.active]="sorting == 'price'">Price</span>
+            </span>
+            <span class="td" *ngIf="!category.is_leaf">
+                <span class="sorting" (click)="setSort('category')" [class.active]="sorting == 'category'">Category</span>
+            </span>
             <span class="td"></span>
         </div>
-        <div class="tr content" *ngFor="let ship of category.ships">
+        <div class="tr content" *ngFor="let ship of filteredShips">
             <span class="td">{{ ship.name }}</span>
             <span class="td">{{ ship.price | number }} cr</span>
             <span class="td" *ngIf="!category.is_leaf">{{ ship.category.path }}</span>
