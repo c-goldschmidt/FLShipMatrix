@@ -1,4 +1,5 @@
 import struct
+import os
 
 from collections import defaultdict
 from django.db import models
@@ -173,6 +174,8 @@ class Ship(models.Model):
         if not extended:
             return result_dict
 
+        lods = self.get_lods()
+
         result_dict.update({
             'infocard': self.infocard,
             'max_bats': self.max_bats,
@@ -193,12 +196,29 @@ class Ship(models.Model):
             'nudge': self.nudge,
             'strafe': self.strafe,
             'strafe_power': self.strafe_power,
-            'lods': self.get_lods(),
+            'lods': lods,
+            'static_model_paths': {
+                lod: '{}static/models/{}.{}.dat'.format(settings.FL_PATH_PREFIX, self.id, lod)
+                for lod in lods
+            },
+            'static_texture_paths': self.get_texture_paths()
         })
         return result_dict
 
     def get_lods(self):
         return list(ShipModelLOD.objects.filter(ship=self).values_list('lod_name', flat=True))
+
+    def get_texture_paths(self):
+        result = {}
+        for tex in self.textures.all():
+            tex_ids = tex.texture_set.values_list('tex_id', flat=True)
+            
+            tex_data = {
+                tex_id: '{}static/textures/{}.{}.tex'.format(settings.FL_PATH_PREFIX, tex.id, tex_id)
+                for tex_id in tex_ids
+            }
+            result.update(tex_data)
+        return result
 
 
 class ShipModelLOD(models.Model):
@@ -228,6 +248,16 @@ class ShipModelLOD(models.Model):
 
         return data
 
+    def move_to_static(self):
+        filename = '{}.{}.dat'.format(self.ship_id, self.lod_name)
+        file_path = os.path.join(settings.BASE_DIR, 'static', 'models', filename)
+
+        if os.path.isfile(file_path):
+            os.unlink(file_path)
+
+        with open(file_path, 'wb') as f:
+            f.write(self.to_binary())
+    
 
 class Texture(models.Model):
     tex_id = models.IntegerField()
@@ -254,3 +284,14 @@ class Texture(models.Model):
         data += self.texture
 
         return data
+
+    def move_to_static(self):
+        filename = '{}.{}.tex'.format(self.texture_pack_id, self.tex_id)
+        file_path = os.path.join(settings.BASE_DIR, 'static', 'textures', filename)
+
+        if os.path.isfile(file_path):
+            os.unlink(file_path)
+
+        with open(file_path, 'wb') as f:
+            f.write(self.to_binary())
+    
