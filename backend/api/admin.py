@@ -50,11 +50,11 @@ class TexturePackAdmin(admin.ModelAdmin):
 class TextureAdmin(admin.ModelAdmin):
     model = Texture
 
-    fields = ('tex_id', 'ix', 'iy', 'inversion')
-    readonly_fields = ('tex_id', 'ix', 'iy')
+    fields = ('tex_id', )
+    readonly_fields = ('tex_id', )
     search_fields = ('tex_id', )
     ordering = ('tex_id', )
-    list_display = ('tex_id', 'ix', 'iy', 'inversion')
+    list_display = ('tex_id', )
 
 
 admin.site.register(Texture, TextureAdmin)

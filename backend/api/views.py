@@ -19,23 +19,7 @@ class ShipListView(View):
 class ShipDetailsView(View):
     def get(self, request, ship_id, *args, **kwargs):
         ship = get_object_or_404(Ship, id=ship_id)
-
         return JSONResponse(ship.to_dict(True))
-
-
-class ShipModelsView(View):
-    def get(self, request, ship_id, lod_name, *args, **kwargs):
-        ship = get_object_or_404(Ship, id=ship_id)
-        model = get_object_or_404(ShipModelLOD, ship=ship, lod_name=lod_name)
-
-        return BinaryResponse(model.to_binary())
-
-
-class ShipTexturesView(View):
-    def get(self, request, ship_id, tex_id, *args, **kwargs):
-        ship = get_object_or_404(Ship, id=ship_id)
-        texture = get_object_or_404(Texture, tex_id=tex_id, texture_pack__in=ship.textures.all())
-        return BinaryResponse(texture.to_binary())
 
 
 class CategoryListView(View):

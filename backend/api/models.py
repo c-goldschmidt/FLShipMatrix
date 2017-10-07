@@ -225,46 +225,14 @@ class ShipModelLOD(models.Model):
     ship = models.ForeignKey(Ship, on_delete=models.CASCADE)
     lod_name = models.CharField(max_length=10)
 
-    vertices = models.BinaryField()
-    normals = models.BinaryField()
-    uvs = models.BinaryField()
-    materials = models.BinaryField()
-
     class Meta:
         indexes = [
             models.Index(fields=['ship', 'lod_name']),
         ]
 
-    def to_binary(self):
-        data = struct.pack('I', len(self.vertices))
-        data += struct.pack('I', len(self.normals))
-        data += struct.pack('I', len(self.uvs))
-        data += struct.pack('I', len(self.materials))
-
-        data += self.vertices
-        data += self.normals
-        data += self.uvs
-        data += self.materials
-
-        return data
-
-    def move_to_static(self):
-        filename = '{}.{}.dat'.format(self.ship_id, self.lod_name)
-        file_path = os.path.join(settings.BASE_DIR, 'static', 'models', filename)
-
-        if os.path.isfile(file_path):
-            os.unlink(file_path)
-
-        with open(file_path, 'wb') as f:
-            f.write(self.to_binary())
-    
 
 class Texture(models.Model):
     tex_id = models.IntegerField()
-    ix = models.IntegerField()
-    iy = models.IntegerField()
-    inversion = models.BooleanField()
-    texture = models.BinaryField()
     texture_pack = models.ForeignKey(
         TexturePack, 
         on_delete=models.CASCADE,
@@ -276,22 +244,3 @@ class Texture(models.Model):
         indexes = [
             models.Index(fields=['tex_id']),
         ]
-
-    def to_binary(self):
-        data = struct.pack('I', self.ix)
-        data += struct.pack('I', self.iy)
-        data += struct.pack('I', 1 if self.inversion else 0)
-        data += self.texture
-
-        return data
-
-    def move_to_static(self):
-        filename = '{}.{}.tex'.format(self.texture_pack_id, self.tex_id)
-        file_path = os.path.join(settings.BASE_DIR, 'static', 'textures', filename)
-
-        if os.path.isfile(file_path):
-            os.unlink(file_path)
-
-        with open(file_path, 'wb') as f:
-            f.write(self.to_binary())
-    

@@ -1,6 +1,9 @@
-export interface Pagination {
-    page: number,
-    itemsPerPage: number,
+export interface Dictionary<V> {
+    [key: string]: V;
+}
+
+export interface Index<V> {
+    [index: number]: V;
 }
 
 export interface Category {
@@ -42,6 +45,8 @@ export interface ShipDetails extends ShipListEntry {
     torgue_x: number,
     hitpoints: number,
     torgue_y: number,
+    static_texture_paths: Index<string>;
+    static_model_paths: Dictionary<string>;
 }
 
 export interface CategoryDetail extends Category {
@@ -52,17 +57,4 @@ export interface CategoryDetail extends Category {
 export interface CategoryTree extends Category {
     children: CategoryTree[],
     parent_id: number,
-}
-
-export interface Filter {
-    search?: string,
-    pagination?: Pagination,
-}
-
-export interface Dictionary<V> {
-    [key: string]: V;
-}
-
-export interface Index<V> {
-    [index: number]: V;
 }

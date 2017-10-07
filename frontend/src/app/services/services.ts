@@ -1,5 +1,5 @@
 import { ShipTexture } from './ship-texture';
-import { Filter, ShipDetails, ShipListEntry, Category, CategoryTree, CategoryDetail, Dictionary } from './interfaces';
+import { ShipDetails, ShipListEntry, Category, CategoryTree, CategoryDetail, Dictionary } from './interfaces';
 import { Injectable } from '@angular/core';
 import { Http, Response, RequestOptions, ResponseContentType } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
@@ -17,9 +17,9 @@ export class ShipDetailService {
         return this.http.get(`${Constants.getPrefix()}api/ships/${shipId}`).map((res: Response) => res.json());
     }
 
-    getModel(shipId: number, lodName: string): Observable<ShipModel> {
+    getModel(ship: ShipDetails, lodName: string): Observable<ShipModel> {
         const options = {responseType: ResponseContentType.ArrayBuffer};
-        return this.http.get(`${Constants.getPrefix()}api/ships/${shipId}/model/${lodName}`, options).map(
+        return this.http.get(ship.static_model_paths[lodName], options).map(
             (res: Response) => new ShipModel(res.arrayBuffer()),
         )
     }
@@ -61,9 +61,9 @@ export class StaticService {
 export class TextureService {
     constructor(private http: Http) {}
 
-    getTexture(shipId: number, texId: number) {
+    getTexture(ship: ShipDetails, texId: number) {
         const options = {responseType: ResponseContentType.ArrayBuffer};
-        return this.http.get(`${Constants.getPrefix()}api/ships/${shipId}/textures/${texId}`, options)
+        return this.http.get(ship.static_texture_paths[texId], options)
             .map((data: Response) => {
                 return new ShipTexture(data.arrayBuffer());
             },

@@ -1,3 +1,4 @@
+import { ShipDetails } from './../../../services/interfaces';
 import { Textures } from './textures';
 import { ShipModel } from './../../../services/ship-model';
 import { StaticService, TextureService } from './../../../services/services';
@@ -15,6 +16,7 @@ export class FlatProgram extends Program {
     constructor(
         staticServ: StaticService,
         model: ShipModel,
+        ship: ShipDetails,
         textureService: TextureService,
     ) {
         super(staticServ);
@@ -22,7 +24,7 @@ export class FlatProgram extends Program {
         this.fragmentShader = this.loadShader('static/shaders/flat.frag', GL.gl.FRAGMENT_SHADER);
         this.vertexShader = this.loadShader('static/shaders/flat.vert', GL.gl.VERTEX_SHADER);
 
-        this.textures = new Textures(this, model, textureService);
+        this.textures = new Textures(this, model, ship, textureService);
 
         if (this.loadingShaders === 0) {
             this.loadProgram();

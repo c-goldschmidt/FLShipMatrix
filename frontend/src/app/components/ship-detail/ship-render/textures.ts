@@ -1,4 +1,4 @@
-import { Index } from './../../../services/interfaces';
+import { Index, ShipDetails } from './../../../services/interfaces';
 import { RenderConstants } from './constants';
 import { ShipTexture } from './../../../services/ship-texture';
 import { TextureService } from './../../../services/services';
@@ -11,7 +11,12 @@ export class Textures {
 
     public loaded = false;
 
-    constructor(private program: Program, private model: ShipModel, private textureService: TextureService) {
+    constructor(
+        private program: Program,
+        private model: ShipModel,
+        private ship: ShipDetails,
+        private textureService: TextureService,
+    ) {
         this.textures = {};
         this.loadTextures();
     }
@@ -46,7 +51,7 @@ export class Textures {
             // create temporary texture
             this.createEmptyTexture(texId);
 
-            this.textureService.getTexture(this.model.id, texId).subscribe((data: ShipTexture) => {
+            this.textureService.getTexture(this.ship, texId).subscribe((data: ShipTexture) => {
                 this.loadTexture(texId, data);
             }, () => {
                 console.error('error loading texture', texId);

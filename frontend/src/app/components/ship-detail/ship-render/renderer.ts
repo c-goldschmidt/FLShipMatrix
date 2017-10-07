@@ -1,3 +1,4 @@
+import { ShipDetails } from './../../../services/interfaces';
 import { Subject } from 'rxjs/Subject';
 import { LineProgram } from './line-program';
 import { Buffers } from './buffers';
@@ -11,6 +12,7 @@ import { FlatProgram } from './flat-program';
 
 export class Renderer {
     private _model: ShipModel;
+    private _ship: ShipDetails;
     public projection: Projection;
 
     private renderStated = false;
@@ -64,11 +66,12 @@ export class Renderer {
         return !!GL.gl && this.programsLoaded;
     }
 
-    set model(model: ShipModel) {
+    setModel(ship: ShipDetails, model: ShipModel) {
         if (model === undefined) { return; }
 
         if (!this._model || this._model.id !== model.id || this._model.lod !== model.lod) {
             this._model = model;
+            this._ship = ship;
 
             if (this.animationFrameHandle) {
                 cancelAnimationFrame(this.animationFrameHandle);
@@ -168,7 +171,7 @@ export class Renderer {
     private initialize() {
         if (!GL.gl) { return; }
 
-        this.flatProgram = new FlatProgram(this.staticServ, this._model, this.textureService);
+        this.flatProgram = new FlatProgram(this.staticServ, this._model, this._ship, this.textureService);
         this.lineProgram = new LineProgram(this.staticServ);
         this.buffers = new Buffers(this._model);
 

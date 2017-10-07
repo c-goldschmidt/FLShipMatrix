@@ -63,12 +63,12 @@ export class ShipRenderComponent implements OnChanges, DoCheck, OnDestroy {
         this.initRender();
 
         this.selectedLOD = this.settings.selectedLOD;
-        this.shipDetais.getModel(this.ship.id, this.selectedLOD).subscribe((model: ShipModel) => {
+        this.shipDetais.getModel(this.ship, this.selectedLOD).subscribe((model: ShipModel) => {
             model.id = this.ship.id;
             model.lod = this.selectedLOD;
 
             this.model = model;
-            this.renderer.model = this.model;
+            this.renderer.setModel(this.ship, this.model);
         });
     }
 
