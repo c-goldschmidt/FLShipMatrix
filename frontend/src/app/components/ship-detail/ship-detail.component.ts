@@ -1,31 +1,27 @@
-import { Observable } from 'rxjs/Observable';
+import { RenderSettings } from './ship-render/ship-render.component';
 import { ShipDetails } from './../../services/interfaces';
-import { Subscription } from 'rxjs/Subscription';
-import { ShipDetailService } from './../../services/services';
-import { ViewService } from './../../services/view-service';
-import { Component, OnDestroy } from '@angular/core';
-import 'rxjs/add/observable/combineLatest'
+import { Component } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
     templateUrl: './ship-detail.component.html',
     styleUrls: ['./ship-detail.component.less'],
 })
 
-export class ShipDetailComponent implements OnDestroy {
-    private sub: Subscription;
-    private ship: ShipDetails;
-
-    public loading = true;
+export class ShipDetailComponent {
+    public ship: ShipDetails;
     public showRender = true;
 
-    constructor(private view: ViewService, serv: ShipDetailService) {
+    public renderSettings: RenderSettings = {
+        autoRotate: true,
+        selectedLOD: '',
+        boundingBox: false,
+    }
 
-        this.sub = view.shipId$.subscribe((shipId) => {
-            this.loading = true;
-            serv.getShipDetails(shipId).subscribe((ship) => {
-                this.ship = ship;
-                this.loading = false;
-            });
+    constructor(route: ActivatedRoute) {
+        route.data.subscribe((data) => {
+            this.renderSettings.selectedLOD = data.ship.lods.sort()[0];
+            this.ship = data.ship
         });
     }
 
@@ -33,7 +29,11 @@ export class ShipDetailComponent implements OnDestroy {
         this.showRender = !this.showRender;
     }
 
-    ngOnDestroy(): void {
-        this.sub.unsubscribe();
+    updateSettings() {
+        this.renderSettings = Object.assign({}, this.renderSettings);
+    }
+
+    updateFromSettings(newSettings: RenderSettings) {
+        this.renderSettings = newSettings;
     }
 }

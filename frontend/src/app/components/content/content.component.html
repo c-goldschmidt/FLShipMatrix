@@ -10,6 +10,14 @@
             </div>
         </div>
         <div class="content-area">
+            <div class="loader-area" *ngIf="isLoading">
+                <div class="loader-inner">
+                    <div class="loader1"></div>
+                    <div class="loader2"></div>
+                    <div class="laoder-text"></div>
+                </div>
+                <div class="loader-text">Loading content...</div>
+            </div>
             <router-outlet></router-outlet>
         </div>
     </div>

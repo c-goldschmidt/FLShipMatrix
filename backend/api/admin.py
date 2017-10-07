@@ -25,7 +25,7 @@ class ShipAdminForm(forms.ModelForm):
 
 class ShipAdmin(admin.ModelAdmin):
     form = ShipAdminForm
-    list_display = ('name', 'category', 'price', 'mass')
+    list_display = ('name', 'category', 'price', 'mass', 'get_lods')
     search_fields = ('name', 'category__name', )
 
 

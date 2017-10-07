@@ -169,10 +169,12 @@ class Ship(models.Model):
             'nudge': self.nudge,
             'strafe': self.strafe,
             'strafe_power': self.strafe_power,
-            'lods': list(ShipModelLOD.objects.filter(
-                ship=self).values_list('lod_name', flat=True)),
+            'lods': self.get_lods(),
         })
         return result_dict
+
+    def get_lods(self):
+        return list(ShipModelLOD.objects.filter(ship=self).values_list('lod_name', flat=True))
 
 
 class ShipModelLOD(models.Model):

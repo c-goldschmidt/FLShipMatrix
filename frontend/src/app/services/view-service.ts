@@ -8,14 +8,12 @@ import { Subject } from 'rxjs/Subject';
 @Injectable()
 export class ViewService {
     private currentCategoryId: number;
-    private currentShipId: number;
     private tree: CategoryTree[];
 
     public tree$ = new ReplaySubject<CategoryTree[]>(1);
     public background$ = new ReplaySubject<string>(1);
     public logo$ = new ReplaySubject<string>(1);
     public catId$ = new Subject<number>();
-    public shipId$ = new Subject<number>();
 
     private categoriesExpanded: Index<boolean>;
     private categoriesLocked: Index<boolean>;
@@ -27,18 +25,13 @@ export class ViewService {
 
     updateFromRoute(params: Params) {
         const catId = parseInt(params.categoryId, 10);
-        const shpId = parseInt(params.shipId, 10);
 
-        if (this.currentCategoryId === catId && this.currentShipId === shpId) {
+        if (this.currentCategoryId === catId) {
             return;
         }
+
         if (this.currentCategoryId !== catId && !isNaN(catId)) {
             this.currentCategoryId = catId;
-            this.catId$.next(catId);
-        }
-        if (this.currentShipId !== shpId && !isNaN(shpId)) {
-            this.currentShipId = shpId;
-            this.shipId$.next(shpId);
         }
 
         if (!this.tree) {

@@ -1,31 +1,17 @@
-import { Observable } from 'rxjs/Observable';
 import { CategoryDetail } from './../../services/interfaces';
-import { CategoryService } from './../../services/services';
-import { Subscription } from 'rxjs/Subscription';
-import { ViewService } from './../../services/view-service';
-import { Component, OnDestroy } from '@angular/core';
+import { Component } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
     templateUrl: './category-detail.component.html',
     styleUrls: ['./category-detail.component.less'],
 })
-export class CategoryDetailComponent implements OnDestroy {
-    private sub: Subscription;
+export class CategoryDetailComponent {
     public category: CategoryDetail;
-    public loading = true;
 
-    constructor(private view: ViewService, serv: CategoryService) {
-        this.sub = view.catId$.subscribe((catId) => {
-            this.loading = true;
-            serv.getCategoryDetail(catId).subscribe((category) => {
-                this.category = category;
-                this.loading = false;
-            });
+    constructor(route: ActivatedRoute) {
+        route.data.subscribe((data) => {
+            this.category = data.category
         });
     }
-
-    ngOnDestroy() {
-        this.sub.unsubscribe();
-    }
-
 }

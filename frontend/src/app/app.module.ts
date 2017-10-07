@@ -1,3 +1,5 @@
+import { FormsModule } from '@angular/forms';
+import { ShipResolver, CategoryResolver } from './services/resolver';
 import { ShipRenderComponent } from './components/ship-detail/ship-render/ship-render.component';
 import { ImageSwitcherComponent } from './components/image-switcher/image-switcher.component';
 import { ContentComponent } from './components/content/content.component';
@@ -16,21 +18,28 @@ import { ShipInfocardComponent } from './components/ship-detail/ship-infocard/sh
 import { Constants } from './constants'
 
 const routes: Routes = [{
+    path: '',
+    redirectTo: 'fl',
+    pathMatch: 'full',
+}, {
     path: 'fl',
     component: ContentComponent,
     children: [{
         path: 'category/:categoryId',
         component: CategoryDetailComponent,
+        resolve: {
+            category: CategoryResolver,
+        },
     }, {
         path: 'category/:categoryId/ship/:shipId',
         component: ShipDetailComponent,
+        resolve: {
+            ship: ShipResolver,
+        },
     }, {
         path: '*',
         component: EmptyComponent,
     }],
-}, {
-    path: '*',
-    redirectTo: '/fl/',
 }];
 
 @NgModule({
@@ -38,6 +47,7 @@ const routes: Routes = [{
         RouterModule.forRoot(routes),
         BrowserModule,
         HttpModule,
+        FormsModule,
     ],
     declarations: [
         AppComponent,
@@ -56,6 +66,8 @@ const routes: Routes = [{
         ShipDetailService,
         StaticService,
         TextureService,
+        CategoryResolver,
+        ShipResolver,
     ],
     bootstrap: [ AppComponent ],
 })

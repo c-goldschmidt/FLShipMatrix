@@ -11,7 +11,7 @@ import { FlatProgram } from './flat-program';
 
 export class Renderer {
     private _model: ShipModel;
-    private projection: Projection;
+    public projection: Projection;
 
     private renderStated = false;
     private context: WebGLRenderingContext;
@@ -24,6 +24,7 @@ export class Renderer {
     private elapsedTime = 0;
     private frameCount = 0;
     private lastTime = 0;
+    private animationFrameHandle: number;
 
     public glushort = 1;
     public fps$ = new Subject<number>();
@@ -33,7 +34,9 @@ export class Renderer {
         private canvas: HTMLCanvasElement,
         private staticServ: StaticService,
         private textureService: TextureService,
-    ) {}
+    ) {
+        this.projection = new Projection(this.canvas);
+    }
 
     private createContext() {
         try {
@@ -66,6 +69,11 @@ export class Renderer {
 
         if (!this._model || this._model.id !== model.id || this._model.lod !== model.lod) {
             this._model = model;
+
+            if (this.animationFrameHandle) {
+                cancelAnimationFrame(this.animationFrameHandle);
+                this.animationFrameHandle = null;
+            }
 
             this.destroy();
             this.createContext();
@@ -139,7 +147,7 @@ export class Renderer {
         }
 
         this.updateFPS();
-        requestAnimationFrame(() => this.drawFrame());
+        this.animationFrameHandle = requestAnimationFrame(() => this.drawFrame());
     }
 
     private updateFPS() {
@@ -164,7 +172,6 @@ export class Renderer {
         this.lineProgram = new LineProgram(this.staticServ);
         this.buffers = new Buffers(this._model);
 
-        this.projection = new Projection(this.canvas);
         this.projection.boundingBox = this._model.vertexBuffer;
     }
 }

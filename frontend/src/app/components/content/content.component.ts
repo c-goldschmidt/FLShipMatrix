@@ -1,10 +1,17 @@
 import { Dictionary } from './../../services/interfaces';
 import { ViewService } from './../../services/view-service';
-import { ActivatedRoute, Params, Router, Event, NavigationEnd } from '@angular/router';
+import {
+    ActivatedRoute,
+    Params,
+    Router,
+    Event,
+    NavigationEnd,
+    NavigationStart,
+    NavigationCancel,
+    NavigationError,
+} from '@angular/router';
 import { Component } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
-import 'rxjs/add/observable/combineLatest'
 
 @Component({
     templateUrl: './content.component.html',
@@ -14,6 +21,7 @@ import 'rxjs/add/observable/combineLatest'
 export class ContentComponent {
     public backgroundImage: string;
     public logoImage: string;
+    public isLoading: boolean;
 
     private sub: Subscription;
 
@@ -29,12 +37,21 @@ export class ContentComponent {
     }
 
     updateRoute(event: Event) {
-        const paramArray = this.route.children.map((child: ActivatedRoute) =>  child.snapshot.params);
+        if (event instanceof NavigationStart) {
+            this.isLoading = true;
+        }
+
+        if (event instanceof NavigationEnd ||
+            event instanceof NavigationCancel ||
+            event instanceof NavigationError) {
+            this.isLoading = false;
+        }
 
         if (!(event instanceof NavigationEnd)) {
             return;
         }
 
+        const paramArray = this.route.children.map((child: ActivatedRoute) =>  child.snapshot.params);
         let params: Dictionary<string> = {};
         if (paramArray.length > 0) {
             params = paramArray.reduce((prev, curr) => Object.assign({}, prev, curr));

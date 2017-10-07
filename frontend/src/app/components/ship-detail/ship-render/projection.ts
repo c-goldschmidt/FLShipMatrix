@@ -2,6 +2,7 @@ import { LineProgram } from './line-program';
 import { RenderConstants } from './constants';
 import { GL } from './gl';
 import { mat4, vec3 } from 'gl-matrix';
+import { EventEmitter } from '@angular/core';
 
 export interface BoundingBox {
     min: [number, number, number];
@@ -12,7 +13,6 @@ export class Projection {
     private lastX: number;
     private lastY: number;
     private mouse = false;
-    private autoRotate = true;
     private mode: 'rotate' | 'move';
     private bounds: BoundingBox;
 
@@ -21,6 +21,9 @@ export class Projection {
 
     private vertexBuffer: WebGLBuffer;
     private indexBuffer: WebGLBuffer;
+
+    public autoRotateChanged = new EventEmitter<boolean>();
+    public autoRotate = true;
 
     public projectionMatrix: mat4;
     public modelViewMatrix: mat4;
@@ -192,7 +195,12 @@ export class Projection {
     private handleMouseDown(event: MouseEvent) {
         this.prevent(event);
         this.mouse = true;
-        this.autoRotate = false;
+
+        if (this.autoRotate) {
+            this.autoRotateChanged.emit(false);
+            this.autoRotate = false;
+        }
+
         this.mode = event.button === 0 ? 'rotate' : 'move';
     }
 
