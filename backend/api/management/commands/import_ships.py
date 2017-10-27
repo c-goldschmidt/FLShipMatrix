@@ -39,10 +39,22 @@ class Command(BaseCommand):
             default=None,
             help='File to import.',
         )
+        parser.add_argument(
+            '--flush',
+            action='store_true',
+            default=False,
+            help='delete all old ships',
+        )  
 
     @transaction.atomic
     def handle(self, **options):
         filename = options.get('file')
+        flush = options.get('flush', False)
+
+        if flush:
+            Ship.objects.all().delete()
+            TexturePack.objects.all().delete()
+            
 
         with ZipFile(filename, 'r') as zf:
             ship_data = json.loads(zf.read('data.json').decode('utf-8'))
