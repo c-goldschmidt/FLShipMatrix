@@ -201,23 +201,27 @@ class Ship(models.Model):
                 lod: '{}static/models/{}.{}.dat'.format(settings.FL_PATH_PREFIX, self.id, lod)
                 for lod in lods
             },
-            'static_texture_paths': self.get_texture_paths()
+            'texture_info': self.get_texture_info()
         })
         return result_dict
 
     def get_lods(self):
         return list(ShipModelLOD.objects.filter(ship=self).values_list('lod_name', flat=True))
 
-    def get_texture_paths(self):
+    def get_texture_info(self):
         result = {}
         for tex in self.textures.all():
-            tex_ids = tex.texture_set.values_list('tex_id', flat=True)
-            
-            tex_data = {
-                tex_id: '{}static/textures/{}.{}.tex'.format(settings.FL_PATH_PREFIX, tex.id, tex_id)
-                for tex_id in tex_ids
-            }
-            result.update(tex_data)
+            textures = tex.texture_set.all()
+            prefix = '{}static/textures'.format(settings.FL_PATH_PREFIX)
+
+            for texture in textures:
+                sub = '{}/{}.{}'.format(prefix, tex.id, texture.tex_id)
+                result[texture.tex_id] = {
+                    'path': '{}.tex'.format(sub),
+                    'light_path': '{}.light.tex'.format(sub) if texture.has_light else None,
+                    'bump_path': '{}.bump.tex'.format(sub) if texture.has_bump else None,
+                    'meta_path': '{}.meta.tex'.format(sub) if texture.has_meta else None,
+                }
         return result
 
 
@@ -238,6 +242,16 @@ class Texture(models.Model):
         on_delete=models.CASCADE,
         blank=True,
         null=True,
+    )
+
+    has_light = models.BooleanField(
+        default=False
+    )
+    has_bump = models.BooleanField(
+        default=False
+    )
+    has_meta = models.BooleanField(
+        default=False
     )
 
     class Meta:

@@ -1,14 +1,15 @@
-import { Index, ShipDetails } from './../../../services/interfaces';
+import { Index, ShipDetails, Dictionary } from './../../../services/interfaces';
 import { RenderConstants } from './constants';
-import { ShipTexture } from './../../../services/ship-texture';
+import { ShipTexture, ShipTexturePack } from './../../../services/ship-texture';
 import { TextureService } from './../../../services/services';
 import { ShipModel } from './../../../services/ship-model';
 import { Program } from './program';
 import { GL } from './gl';
 
 export class Textures {
-    private textures: Index<WebGLTexture>;
-
+    private textures: Index<Dictionary<WebGLTexture>>;
+    private diffuseIndex: Index<number[]>;
+    private opacityIndex: Index<number[]>;
     public loaded = false;
 
     constructor(
@@ -16,29 +17,68 @@ export class Textures {
         private model: ShipModel,
         private ship: ShipDetails,
         private textureService: TextureService,
+        loadFeatures = false,
     ) {
         this.textures = {};
-        this.loadTextures();
+        this.loadTextures(loadFeatures);
     }
 
-    bind(index: number) {
+    bind(index: number, bindFeatures = false) {
         const texId = this.model.matBuffer[index];
         GL.gl.activeTexture(GL.gl.TEXTURE0);
-        GL.gl.bindTexture(GL.gl.TEXTURE_2D, this.textures[texId]);
+        GL.gl.bindTexture(GL.gl.TEXTURE_2D, this.textures[texId].base);
 
         GL.gl.uniform1i(this.program.getAdditionalUniform('uSampler'), 0);
+
+        if (bindFeatures) {
+            if (!this.textures[texId].light) {
+                console.log(texId, 'is null');
+            }
+
+            GL.gl.activeTexture(GL.gl.TEXTURE1);
+            GL.gl.bindTexture(GL.gl.TEXTURE_2D, this.textures[texId].light);
+
+            GL.gl.uniform1i(this.program.getAdditionalUniform('uLights'), 1);
+
+            if (this.textures[texId].bump) {
+                GL.gl.activeTexture(GL.gl.TEXTURE2);
+                GL.gl.bindTexture(GL.gl.TEXTURE_2D, this.textures[texId].bump);
+
+                GL.gl.uniform1i(this.program.getAdditionalUniform('uBump'), 2);
+                GL.gl.uniform1i(this.program.getAdditionalUniform('hasBump'), 1);
+            } else {
+                GL.gl.uniform1i(this.program.getAdditionalUniform('hasBump'), 0);
+            }
+
+            if (this.diffuseIndex[texId]) {
+                this.diffuseIndex[texId][3] = 1.0;
+                GL.gl.uniform4fv(this.program.getAdditionalUniform('diffuseColor'), this.diffuseIndex[texId]);
+            } else {
+                GL.gl.uniform4fv(this.program.getAdditionalUniform('diffuseColor'), [0, 0, 0, 0]);
+            }
+            if (this.opacityIndex[texId]) {
+                this.opacityIndex[texId][1] = 1.0;
+                GL.gl.uniform2fv(this.program.getAdditionalUniform('mixOpacity'), this.opacityIndex[texId]);
+            } else {
+                GL.gl.uniform2fv(this.program.getAdditionalUniform('mixOpacity'), [0, 0]);
+            }
+        }
     }
 
     destroy() {
         this.loaded = false;
         for (const texId of Object.keys(this.textures)) {
-            GL.gl.deleteTexture(this.textures[texId]);
+            for (const type of Object.keys(this.textures[texId])) {
+                GL.gl.deleteTexture(this.textures[texId][type]);
+            }
         }
         this.textures = [];
     }
 
-    private loadTextures() {
+    private loadTextures(loadFeatures = false) {
         this.textures = [];
+        this.diffuseIndex = [];
+        this.opacityIndex = [];
 
         const alreadyLoading: number[] = [];
 
@@ -50,19 +90,44 @@ export class Textures {
 
             // create temporary texture
             this.createEmptyTexture(texId);
+            if (loadFeatures) {
+                this.createEmptyTexture(texId, new Uint8Array([0, 0, 0, 255]), 'light');
+            }
 
-            this.textureService.getTexture(this.ship, texId).subscribe((data: ShipTexture) => {
-                this.loadTexture(texId, data);
-            }, () => {
-                console.error('error loading texture', texId);
+            this.textureService.getTexture(this.ship, texId).subscribe((data: ShipTexturePack) => {
+                this.loadTexture(texId, data.base);
+                if (data.meta && data.meta.diffuse_color) {
+                    this.diffuseIndex[texId] = data.meta.diffuse_color;
+                }
+                if (data.meta && data.meta.opacity) {
+                    this.opacityIndex[texId] = data.meta.opacity;
+                }
+
+                if (data.light && loadFeatures) {
+                    this.loadTexture(texId, data.light, 'light');
+                }
+
+                if (data.bump && loadFeatures) {
+                    this.loadTexture(texId, data.bump, 'bump');
+                }
+
+            }, (error: Error) => {
+                console.error('error loading texture:', texId, error.message);
                 this.createEmptyTexture(texId, new Uint8Array([0, 0, 0, 220]));
+                if (loadFeatures) {
+                    this.createEmptyTexture(texId, new Uint8Array([0, 0, 0, 1]), 'light');
+                }
             });
         }
 
         this.loaded = true;
     }
 
-    private createEmptyTexture(texId: number, color: Uint8Array = new Uint8Array([0, 0, 255, 255])) {
+    private createEmptyTexture(
+        texId: number,
+        color = new Uint8Array([0, 0, 255, 255]),
+        type = 'base',
+    ) {
         const tex = GL.gl.createTexture();
         GL.gl.bindTexture(GL.gl.TEXTURE_2D, tex);
 
@@ -85,10 +150,13 @@ export class Textures {
         GL.gl.texParameteri(GL.gl.TEXTURE_2D, GL.gl.TEXTURE_MIN_FILTER, GL.gl.LINEAR);
         GL.gl.bindTexture(GL.gl.TEXTURE_2D, null);
 
-        this.textures[texId] = tex;
+        if (!this.textures[texId]) {
+            this.textures[texId] = {};
+        }
+        this.textures[texId][type] = tex;
     }
 
-    private loadTexture(texId: number, data: ShipTexture) {
+    private loadTexture(texId: number, data: ShipTexture, type = 'base') {
         const tex = GL.gl.createTexture();
         GL.gl.bindTexture(GL.gl.TEXTURE_2D, tex);
         GL.gl.pixelStorei(GL.gl.UNPACK_FLIP_Y_WEBGL, data.inversion);
@@ -117,11 +185,13 @@ export class Textures {
         }
         GL.gl.bindTexture(GL.gl.TEXTURE_2D, null);
 
-        if (this.textures[texId]) {
+        if (this.textures[texId] && this.textures[texId][type]) {
             // remove temp texture
-            GL.gl.deleteTexture(this.textures[texId]);
+            GL.gl.deleteTexture(this.textures[texId][type]);
+        } else if (!this.textures[texId]) {
+            this.textures[texId] = {};
         }
-        this.textures[texId] = tex;
+        this.textures[texId][type] = tex;
     }
 
     private isPowerOf2(value: number): boolean {

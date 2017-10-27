@@ -1,7 +1,8 @@
-import { RenderSettings } from './ship-render/ship-render.component';
 import { ShipDetails } from './../../services/interfaces';
 import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+
+import { RenderSettings } from './ship-render/renderer.interfaces'
 
 @Component({
     templateUrl: './ship-detail.component.html',
@@ -16,6 +17,16 @@ export class ShipDetailComponent {
         autoRotate: true,
         selectedLOD: '',
         boundingBox: false,
+        drawTextures: true,
+        drawLights: true,
+        shader: 'flat',
+        pbrSettings: {
+            metallicRoughness: [0.7, 0.5],
+            lightColor: [1.0, 1.0, 1.0],
+            lightDirection: [0.5, 0.5, 0.1],
+            emissiveFactor: [0.8, 0.8, 0.8],
+            camera: [0, 0, 0],
+        },
     }
 
     constructor(route: ActivatedRoute) {

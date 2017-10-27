@@ -80,16 +80,28 @@ class Command(BaseCommand):
 
     @staticmethod
     def _import_model(zf, ship, lod_name, import_id):
-        data = {
+        ShipModelLOD.objects.create(**{
             'ship': ship,
             'lod_name': lod_name,
-            'normals': zf.read('{}.normals.{}.dat'.format(import_id, lod_name.lower())),
-            'vertices': zf.read('{}.vertices.{}.dat'.format(import_id, lod_name.lower())),
-            'uvs': zf.read('{}.uvs.{}.dat'.format(import_id, lod_name.lower())),
-            'materials': zf.read('{}.materials.{}.dat'.format(import_id, lod_name.lower())),
-        }
+        })
 
-        ShipModelLOD.objects.create(**data)
+        vertices = zf.read('{}.vertices.{}.dat'.format(import_id, lod_name.lower()))
+        normals = zf.read('{}.normals.{}.dat'.format(import_id, lod_name.lower()))
+        uvs = zf.read('{}.uvs.{}.dat'.format(import_id, lod_name.lower()))
+        materials = zf.read('{}.materials.{}.dat'.format(import_id, lod_name.lower()))
+
+        data = struct.pack('I', len(vertices))
+        data += struct.pack('I', len(normals))
+        data += struct.pack('I', len(uvs))
+        data += struct.pack('I', len(materials))
+        data += vertices
+        data += normals
+        data += uvs
+        data += materials
+        
+        filename = 'static/models/{}.{}.dat'.format(ship.id,  lod_name)
+        with open(filename, 'wb') as handle:
+            handle.write(data)
 
     @classmethod
     def _import_textures(cls, zf, texture_ids):
@@ -105,14 +117,35 @@ class Command(BaseCommand):
                     print('could not find {}.{}.tex'.format(pack_id, tex_id))
                     continue
 
+                additions = cls._load_additions(zf, pack, pack_id, tex_id)
+
                 data = {
                     'tex_id': tex_id,
-                    'ix': struct.unpack('I', tex_data[0:4])[0],
-                    'iy': struct.unpack('I', tex_data[4:8])[0],
-                    'inversion': struct.unpack('?', tex_data[8:9])[0],
-                    'texture': tex_data[3:],
                     'texture_pack': pack,
                 }
+                data.update(additions)
 
-                Texture.objects.create(**data)
+                new_tex = Texture.objects.create(**data)
+
+                filename = 'static/textures/{}.{}.tex'.format(pack.id, tex_id)
+                with open(filename, 'wb') as handle:
+                    handle.write(tex_data)
+
         return pack_by_pack_id
+
+    @classmethod
+    def _load_additions(cls, zf, pack, pack_id, tex_id):
+        result = {}
+        for adds in ['light', 'bump', 'meta']:
+            try:
+                tex_data = zf.read('{}.{}.{}.tex'.format(pack_id, tex_id, adds))
+
+                filename = 'static/textures/{}.{}.{}.tex'.format(pack.id, tex_id, adds)
+                with open(filename, 'wb') as handle:
+                    handle.write(tex_data)
+
+                result['has_{}'.format(adds)] = True
+            except KeyError:
+                pass
+
+        return result

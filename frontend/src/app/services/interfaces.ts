@@ -23,6 +23,18 @@ export interface ShipListEntry {
     // TODO: more list details
 }
 
+export interface TextureInfo {
+    path: string;
+    light_path: string;
+    bump_path: string;
+    meta_path: string;
+}
+
+export interface TextureMeta {
+    opacity: number[];
+    diffuse_color: number[];
+}
+
 export interface ShipDetails extends ShipListEntry {
     infocard: string,
     max_bats: number,
@@ -45,8 +57,8 @@ export interface ShipDetails extends ShipListEntry {
     torgue_x: number,
     hitpoints: number,
     torgue_y: number,
-    static_texture_paths: Index<string>;
     static_model_paths: Dictionary<string>;
+    texture_info: Dictionary<TextureInfo>;
 }
 
 export interface CategoryDetail extends Category {

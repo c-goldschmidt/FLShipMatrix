@@ -15,12 +15,7 @@ import {
     Output,
     EventEmitter,
 } from '@angular/core';
-
-export interface RenderSettings {
-    autoRotate: boolean;
-    selectedLOD: string;
-    boundingBox: boolean;
-}
+import { RenderSettings } from './renderer.interfaces';
 
 @Component({
     selector: 'ship-render',
@@ -52,8 +47,7 @@ export class ShipRenderComponent implements OnChanges, DoCheck, OnDestroy {
 
     ngOnChanges(changes: SimpleChanges) {
         if (this.renderer) {
-            this.renderer.projection.autoRotate = this.settings.autoRotate;
-            this.renderer.drawBoundingBox = this.settings.boundingBox;
+            this.renderer.settings = this.settings;
         }
 
         if (!changes.ship && this.selectedLOD === this.settings.selectedLOD) {

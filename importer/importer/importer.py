@@ -182,10 +182,10 @@ class ShipDataImporter(object):
             full_pack = TexturePack(material_ids, [path_map[path]['file']], self)
             textures = full_pack.get_textures()
 
-            if len(textures.keys()) == 0:
+            if not textures:
                 continue
 
-            self.data_files.append(TextureEncoder(pack_id, textures))
+            self.data_files.append(TextureEncoder(pack_id, material_ids, path_map[path]['file'], self))
 
             for import_id in path_map[path]['import_ids']:
                 if result_dict['ships'][import_id].get('texture_pack_ids') is None:
@@ -193,6 +193,10 @@ class ShipDataImporter(object):
                 result_dict['ships'][import_id]['texture_pack_ids'].append(pack_id)
 
             result_dict['texture_ids'][pack_id] = list(textures.keys())
+
+            full_pack = None
+            textures = None
+
             pack_id += 1
 
     def status(self, message):

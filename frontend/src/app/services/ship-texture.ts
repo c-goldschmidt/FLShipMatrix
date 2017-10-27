@@ -1,3 +1,5 @@
+import { TextureMeta } from './interfaces';
+
 export class ShipTexture {
     public rgbMatrix: Uint8Array;
     public width: number;
@@ -16,15 +18,34 @@ export class ShipTexture {
         this.height = new Uint32Array(buffer, offset, 1)[0];
         offset += Uint32Array.BYTES_PER_ELEMENT;
 
-        this.inversion = new Uint32Array(buffer, offset, 1)[0] === 1;
-        offset += Uint32Array.BYTES_PER_ELEMENT;
-
-        // for some reason, there's some padding
-        offset += 6;
+        this.inversion = new Uint8Array(buffer, offset, 1)[0] === 1;
+        offset += Uint8Array.BYTES_PER_ELEMENT;
 
         // width * height * channel count (RGBA = 4)
         const matrixLength = this.width * this.height * 4;
         this.rgbMatrix = new Uint8Array(buffer, offset, matrixLength);
         offset += matrixLength;
+    }
+}
+
+export class ShipTexturePack {
+    public base: ShipTexture;
+    public light: ShipTexture;
+    public bump: ShipTexture;
+
+    constructor(
+        base: ArrayBuffer,
+        light: ArrayBuffer,
+        bump: ArrayBuffer,
+        public meta: TextureMeta,
+    ) {
+        this.base = new ShipTexture(base);
+
+        if (light) {
+            this.light = new ShipTexture(light);
+        }
+        if (bump) {
+            this.bump = new ShipTexture(bump);
+        }
     }
 }

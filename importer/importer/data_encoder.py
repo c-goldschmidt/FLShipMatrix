@@ -1,4 +1,6 @@
 import struct
+import json
+from .pyfl_utils.models.texturepack import TexturePack
 
 class ModelEncoder(object):
 
@@ -67,22 +69,52 @@ class ModelEncoder(object):
         return filename
 
 class TextureEncoder(object):
-    def __init__(self, pack_id, textures):
-        self.textures = textures
+    def __init__(self, pack_id, material_ids, mat_path, parent):
+        self.textures = None
+        self.additions = None
+        self.meta = None
         self.pack_id = pack_id
+        self.material_ids = material_ids
+        self.mat_path = mat_path
+        self.parent = parent
+
+    def load(self):
+        full_pack = TexturePack(self.material_ids, [self.mat_path], self.parent)
+        self.textures = full_pack.get_textures()
+        self.additions = full_pack.get_additions()
+        self.meta = full_pack.get_meta()
 
     def write_to_zip(self, zf):
+        self.load()
+
         inventory = []
         for tex_id, tex in self.textures.items():
-            filename = '{}.{}.tex'.format(self.pack_id, tex_id)
-            inventory.append(filename)
+            self._write_texture(zf, tex_id, tex, inventory)
 
-            content = struct.pack('I', tex.ix)
-            content += struct.pack('I', tex.iy)
-            content += struct.pack('?', tex.inversion)
-            content += tex.rgb_matrix
+            for key in self.additions[tex_id]:
+                self._write_texture(zf, '{}.{}'.format(tex_id, key), self.additions[tex_id][key], inventory)
 
-            zf.writestr(filename, content)
-        
+            if tex_id in self.meta:
+                self._write_meta(zf, tex_id, self.meta[tex_id], inventory)
+
         self.textures = None
+        self.additions = None
         return inventory
+
+    def _write_meta(self, zf, tex_id, data, inventory):
+        filename = '{}.{}.meta.tex'.format(self.pack_id, tex_id)
+        content = json.dumps(data)
+
+        zf.writestr(filename, content)
+        inventory.append(filename)
+
+    def _write_texture(self, zf, tex_id, tex, inventory):
+        filename = '{}.{}.tex'.format(self.pack_id, tex_id)
+
+        content = struct.pack('I', tex.ix)
+        content += struct.pack('I', tex.iy)
+        content += struct.pack('?', tex.inversion)
+        content += tex.rgb_matrix
+
+        zf.writestr(filename, content)
+        inventory.append(filename)

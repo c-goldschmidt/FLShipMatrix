@@ -1,3 +1,5 @@
+import { PBRProgram } from './pbr-program';
+import { RenderSettings } from './renderer.interfaces';
 import { ShipDetails } from './../../../services/interfaces';
 import { Subject } from 'rxjs/Subject';
 import { LineProgram } from './line-program';
@@ -18,8 +20,8 @@ export class Renderer {
     private renderStated = false;
     private context: WebGLRenderingContext;
 
-    private flatProgram: Program;
     private lineProgram: Program;
+    private useProgram: Program;
     private buffers: Buffers;
     private renderBoundingBox: true;
 
@@ -28,7 +30,16 @@ export class Renderer {
     private lastTime = 0;
     private animationFrameHandle: number;
 
-    public glushort = 1;
+    private _settings: RenderSettings = {
+        autoRotate: true,
+        selectedLOD: 'Level0',
+        boundingBox: false,
+        drawTextures: true,
+        drawLights: true,
+        shader: 'flat',
+        pbrSettings: {},
+    }
+
     public fps$ = new Subject<number>();
     public drawBoundingBox = false;
 
@@ -41,11 +52,13 @@ export class Renderer {
     }
 
     private createContext() {
+        // tslint:disable-next-line:no-string-literal
+        window['debug'] = this;
         try {
             const options = {alpha: true};
             GL.gl = <WebGLRenderingContext>(
-                this.canvas.getContext('webgl', options) ||
-                this.canvas.getContext('experimental-webgl', options)
+                this.canvas.getContext('experimental-webgl', options) ||
+                this.canvas.getContext('webgl', options)
             );
             console.log('webgl context okay');
         } catch (e) {
@@ -55,7 +68,7 @@ export class Renderer {
 
     private get programsLoaded() {
          /* this.texProgram.loaded && */
-        return this.buffers.loaded && this.flatProgram.loaded && this.lineProgram.loaded;
+        return this.buffers.loaded && this.useProgram.loaded && this.lineProgram.loaded;
     }
 
     private get sizeValid() {
@@ -64,6 +77,21 @@ export class Renderer {
 
     get initialized() {
         return !!GL.gl && this.programsLoaded;
+    }
+
+    set settings(settings: RenderSettings) {
+        this.projection.autoRotate = settings.autoRotate;
+
+        const switchProgram = settings.shader !== this._settings.shader;
+        let updateShaders = settings.drawLights !== this._settings.drawLights;
+        updateShaders = updateShaders || settings.drawTextures !== this._settings.drawTextures;
+
+        this._settings = JSON.parse(JSON.stringify(settings));
+        if (switchProgram) {
+            this.switchProgram();
+        } else if (updateShaders) {
+            this.updateShaders();
+        }
     }
 
     setModel(ship: ShipDetails, model: ShipModel) {
@@ -100,8 +128,8 @@ export class Renderer {
         if (this.buffers) {
             this.buffers.destroy();
         }
-        if (this.flatProgram) {
-            this.flatProgram.destroy();
+        if (this.useProgram) {
+            this.useProgram.destroy();
         }
         if (this.lineProgram) {
             this.lineProgram.destroy();
@@ -138,10 +166,14 @@ export class Renderer {
 
             this.buffers.bind(i);
 
-            this.flatProgram.use(i, this.projection);
+            if (this.useProgram instanceof PBRProgram) {
+                this.useProgram.runtimeSettings = this._settings.pbrSettings;
+            }
+
+            this.useProgram.use(i, this.projection);
             GL.gl.drawElements(GL.gl.TRIANGLES, vertexCount, GL.gl.UNSIGNED_SHORT, 0);
 
-            if (this.drawBoundingBox) {
+            if (this._settings.boundingBox) {
                 this.buffers.bindBounding();
                 this.lineProgram.use(i, this.projection);
 
@@ -168,11 +200,52 @@ export class Renderer {
         }
     }
 
+    private updateShaders() {
+        console.log('updating shader');
+
+        if (this._settings.shader === 'flat') {
+            this.useProgram.updateSettings({
+                lamberts: this._settings.drawLights,
+                textures: this._settings.drawTextures,
+                debug_lights: false,
+            });
+        }
+    }
+
+    private switchProgram() {
+        this.useProgram.destroy();
+        this.initializeProgram();
+    }
+
+    private initializeProgram() {
+        if (this._settings.shader === 'flat') {
+            this.useProgram = new FlatProgram(
+                this.staticServ, this._model, this._ship, this.textureService,
+                {
+                    lamberts: this._settings.drawLights,
+                    textures: this._settings.drawTextures,
+                    debug_lights: false,
+                },
+            );
+        } else {
+            this.useProgram = new PBRProgram(
+                this.staticServ, this._model, this._ship, this.textureService,
+                {
+                    has_basecolormap: true,
+                    has_uv: true,
+                    has_normals: true,
+                    has_emissivemap: true,
+                    has_normalmap: true,
+                },
+            );
+        }
+    }
+
     private initialize() {
         if (!GL.gl) { return; }
 
-        this.flatProgram = new FlatProgram(this.staticServ, this._model, this._ship, this.textureService);
-        this.lineProgram = new LineProgram(this.staticServ);
+        this.initializeProgram();
+        this.lineProgram = new LineProgram(this.staticServ, {dashed: true});
         this.buffers = new Buffers(this._model);
 
         this.projection.boundingBox = this._model.vertexBuffer;

@@ -54,10 +54,79 @@
                         </select>
                     </div>
                 </div>
+            </div>
+
+            <div class="table settings-table">
+                <div class="tr">
+                    <div class="td header">
+                        <select [(ngModel)]="renderSettings.shader" (change)="updateSettings()">
+                            <option value="flat">Flat shader</option>
+                            <option value="pbr">(experimental) PBR shader</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="table settings-table">
                 <div class="tr">
                     <div class="td">(debug) bounds</div>
                     <div class="td">
                         <input type="checkbox" [(ngModel)]="renderSettings.boundingBox" (change)="updateSettings()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="table settings-table" *ngIf="renderSettings.shader === 'flat'">
+                <div class="tr">
+                    <div class="td">(debug) lambert shading</div>
+                    <div class="td">
+                        <input type="checkbox" [(ngModel)]="renderSettings.drawLights" (change)="updateSettings()">
+                    </div>
+                </div>
+                <div class="tr">
+                    <div class="td">(debug) textures</div>
+                    <div class="td">
+                        <input type="checkbox" [(ngModel)]="renderSettings.drawTextures" (change)="updateSettings()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="table settings-table" *ngIf="renderSettings.shader === 'pbr'">
+                <div class="tr">
+                    <div class="td header">PBR</div>
+                </div>
+            </div>
+            <div class="table settings-table" *ngIf="renderSettings.shader === 'pbr'">
+                <div class="tr">
+                    <div class="td">
+                        <div>
+                            <div>Roughness</div>
+                            <input type="number" [(ngModel)]="renderSettings.pbrSettings.metallicRoughness[0]" (change)="updateSettings()" min="0" max="1" step="0.05">
+                            <input type="number" [(ngModel)]="renderSettings.pbrSettings.metallicRoughness[1]" (change)="updateSettings()" min="0" max="1" step="0.05">
+                        </div>
+                        <div>
+                            <div>Light color</div>
+                            <input type="number" [(ngModel)]="renderSettings.pbrSettings.lightColor[0]" (change)="updateSettings()" min="0" max="1" step="0.05">
+                            <input type="number" [(ngModel)]="renderSettings.pbrSettings.lightColor[1]" (change)="updateSettings()" min="0" max="1" step="0.05">
+                            <input type="number" [(ngModel)]="renderSettings.pbrSettings.lightColor[2]" (change)="updateSettings()" min="0" max="1" step="0.05">
+                        </div>
+                        <div>
+                            <div>Light direction</div>
+                            <input type="number" [(ngModel)]="renderSettings.pbrSettings.lightDirection[0]" (change)="updateSettings()" min="0" max="1" step="0.05">
+                            <input type="number" [(ngModel)]="renderSettings.pbrSettings.lightDirection[1]" (change)="updateSettings()" min="0" max="1" step="0.05">
+                            <input type="number" [(ngModel)]="renderSettings.pbrSettings.lightDirection[2]" (change)="updateSettings()" min="0" max="1" step="0.05">
+                        </div>   
+                        <div>
+                            <div>emissiveFactor</div>
+                            <input type="number" [(ngModel)]="renderSettings.pbrSettings.emissiveFactor[0]" (change)="updateSettings()" min="0" max="1" step="0.05">
+                            <input type="number" [(ngModel)]="renderSettings.pbrSettings.emissiveFactor[1]" (change)="updateSettings()" min="0" max="1" step="0.05">
+                            <input type="number" [(ngModel)]="renderSettings.pbrSettings.emissiveFactor[2]" (change)="updateSettings()" min="0" max="1" step="0.05">
+                        </div>  
+                        <div>
+                            <div>camera</div>
+                            <input type="number" [(ngModel)]="renderSettings.pbrSettings.camera[0]" (change)="updateSettings()" min="0" max="1" step="0.05">
+                            <input type="number" [(ngModel)]="renderSettings.pbrSettings.camera[1]" (change)="updateSettings()" min="0" max="1" step="0.05">
+                            <input type="number" [(ngModel)]="renderSettings.pbrSettings.camera[2]" (change)="updateSettings()" min="0" max="1" step="0.05">
+                        </div>
                     </div>
                 </div>
             </div>

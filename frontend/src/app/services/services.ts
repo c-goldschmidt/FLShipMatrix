@@ -1,13 +1,24 @@
-import { ShipTexture } from './ship-texture';
-import { ShipDetails, ShipListEntry, Category, CategoryTree, CategoryDetail, Dictionary } from './interfaces';
+import { ShipTexture, ShipTexturePack } from './ship-texture';
+import {
+    ShipDetails,
+    ShipListEntry,
+    Category,
+    CategoryTree,
+    CategoryDetail,
+    Dictionary,
+    TextureMeta,
+} from './interfaces';
 import { Injectable } from '@angular/core';
 import { Http, Response, RequestOptions, ResponseContentType } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/observable/of';
+import 'rxjs/add/observable/throw';
+import 'rxjs/add/observable/forkJoin';
 
 import { ShipModel } from './ship-model';
 import { Constants } from '../constants';
+import { Subscriber } from 'rxjs/Subscriber';
 
 @Injectable()
 export class ShipDetailService {
@@ -61,12 +72,59 @@ export class StaticService {
 export class TextureService {
     constructor(private http: Http) {}
 
-    getTexture(ship: ShipDetails, texId: number) {
+    getTexture(ship: ShipDetails, texId: number): Observable<ShipTexturePack> {
         const options = {responseType: ResponseContentType.ArrayBuffer};
-        return this.http.get(ship.static_texture_paths[texId], options)
-            .map((data: Response) => {
-                return new ShipTexture(data.arrayBuffer());
-            },
-        );
+        if (ship.texture_info[texId]) {
+            const path = ship.texture_info[texId].path;
+            const toLoad = [this.http.get(path, options)];
+            const flags = {
+                light: false,
+                bump: false,
+                meta: false,
+            }
+
+            if (ship.texture_info[texId].light_path) {
+                toLoad.push(this.http.get(ship.texture_info[texId].light_path, options));
+                flags.light = true;
+            }
+            if (ship.texture_info[texId].bump_path) {
+                toLoad.push(this.http.get(ship.texture_info[texId].bump_path, options));
+                flags.bump = true;
+            }
+            if (ship.texture_info[texId].meta_path) {
+                toLoad.push(this.http.get(ship.texture_info[texId].meta_path));
+                flags.meta = true;
+            }
+
+            return new Observable<ShipTexturePack>((subscriber: Subscriber<ShipTexturePack>) => {
+                Observable.forkJoin(...toLoad).subscribe((result: Response[]) => {
+                    const base = result.shift().arrayBuffer();
+                    let light: ArrayBuffer;
+                    let bump: ArrayBuffer;
+                    let meta: TextureMeta;
+
+                    if (flags.light) {
+                        light = result.shift().arrayBuffer();
+                    }
+
+                    if (flags.bump) {
+                        bump = result.shift().arrayBuffer();
+                    }
+                    if (flags.meta) {
+                        meta = result.shift().json();
+                    }
+
+                    subscriber.next(new ShipTexturePack(base, light, bump, meta));
+                    subscriber.complete();
+                }, (error: any) => {
+                    subscriber.error(error);
+                    subscriber.complete();
+                });
+
+                return subscriber;
+            });
+        } else {
+            return Observable.throw(new Error('Texture does not exist'));
+        }
     }
 }
